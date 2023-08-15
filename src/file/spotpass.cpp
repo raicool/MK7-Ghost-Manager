@@ -12,6 +12,8 @@ uint8_t spotpass::load(const char* dir)
 	uint8_t  buffer = 0;
 
 	file_directory = dir;
+
+	if (spotpass_data.is_open()) spotpass_data.close();
 	
 	spotpass_data.open(dir, std::ios::in | std::ios::out | std::ios::binary | std::ios::ate);
 	size_t file_size = spotpass_data.tellg();
@@ -95,8 +97,8 @@ void spotpass::overwrite_ghost(uint32_t offset, const char* ghost_dir)
 		bin_read<char>(&byte, ghost_data, i);
 		bin_write<char>(&byte, spotpass_data, offset + i);
 	}
-	
-	spotpass_data.close();
+
+	ghost_data.close();
 
 	// reload ghost since its overwritten
 	reload();
@@ -119,7 +121,6 @@ void spotpass::delete_ghost(ghost* _ghost)
 		bin_move(spotpass_data, offset + GHOST_SIZE, offset, GHOST_SIZE, true);
 		offset += GHOST_SIZE;
 	}
-	spotpass_data.close();
 
 	// reload ghost since its overwritten
 	reload();
@@ -168,7 +169,6 @@ bool spotpass::add_ghost(const char* ghost_dir)
 		offset += GHOST_SIZE;
 	}
 
-	spotpass_data.close();
 	ghost_data.close();
 
 	// reload ghost since its overwritten
