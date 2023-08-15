@@ -7,7 +7,7 @@
 
 void app::init()
 {
-	sdlwindow.init(this, "MK7 Spotpass Ghost Manager", 1280, 720, 144, SDL_WINDOW_RESIZABLE);
+	sdlwindow.init(this, "MK7 Spotpass Ghost Manager", 848, 480, 144, SDL_WINDOW_RESIZABLE);
 
 	logger::init_logger();
 
