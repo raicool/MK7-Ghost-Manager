@@ -4,34 +4,42 @@
 // stores where each course is inside of cup file
 static const uint8_t cup_course_index[] =
 {
-	2, // 0
-	4, // 1
-	3, // 2
-	2, // 3
+	
 	1, // 4
 	4, // 5
 	3, // 6
 	1, // 7
+
 	1, // 8
 	4, // 9
 	2, // 10
 	3, // 11
+
 	1, // 12
 	4, // 13
 	2, // 14
 	3, // 15
+
 	3, // 16
 	1, // 17
 	4, // 18
 	3, // 19
+
+	2, // 0
+	4, // 1
+	3, // 2
+	2, // 3
+
 	4, // 20
 	3, // 21
 	2, // 22
 	4, // 23
+
 	2, // 24
 	3, // 25
 	1, // 26
 	1, // 27
+
 	1, // 28
 	2, // 29
 	2, // 30
@@ -41,11 +49,11 @@ static const uint8_t cup_course_index[] =
 // course id for every course in each cup
 static const uint8_t cup_courses[8][4] =
 {
-	{ 26, 29, 19, 20 }, // Shell Cup
 	{  4,  3,  2,  5 }, // Mushroom Cup
 	{  8,  0, 15,  1 }, // Flower Cup
 	{ 12, 14,  6,  9 }, // Star Cup
 	{  7, 10, 11, 13 }, // Special Cup
+	{ 26, 29, 19, 20 }, // Shell Cup
 	{ 28, 30, 16, 23 }, // Banana Cup
 	{ 27, 22, 25, 18 }, // Leaf Cup
 	{ 17, 24, 21, 31 }  // Lightning Cup
@@ -96,11 +104,11 @@ static const char* course_name[] =
 
 static const char* cup_name[] =
 {
-	"Shell Cup",    // 0
-	"Mushroom Cup", // 1
-	"Flower Cup",   // 2
-	"Star Cup",     // 3
-	"Special Cup",  // 4
+	"Mushroom Cup", // 0
+	"Flower Cup",   // 1
+	"Star Cup",     // 2
+	"Special Cup",  // 3
+	"Shell Cup",    // 4
 	"Banana Cup",   // 5
 	"Leaf Cup",     // 6
 	"Lightning Cup" // 7

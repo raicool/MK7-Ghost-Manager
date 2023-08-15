@@ -41,14 +41,16 @@ int app::update()
 void app::open_spotpass_file()
 {
 	const char* file_dir = open_file();
-	uint8_t cup = filename_to_cup(std::filesystem::path(file_dir).filename().string().c_str());
+	
+	spotpass* new_spotpass = new spotpass();
+	uint8_t cup = new_spotpass->load(file_dir);
+
 	LOG_DEBUG("Cup = {}, file = {}", cup, std::filesystem::path(file_dir).filename().string().c_str());
+
 	if (cup >= 0 && cup <= 8)
 	{
-		if (spotpass_files[cup]) delete spotpass_files[cup];
-		spotpass_files[cup] = new spotpass();
-		spotpass_files[cup]->load(file_dir);
-		spotpass_files[cup]->cup_id = cup;
+		if (spotpass_files[cup - 1]) delete spotpass_files[cup - 1];
+		spotpass_files[cup - 1] = new_spotpass;
 	}
 	else
 	{
@@ -67,20 +69,20 @@ void app::open_spotpass_folder()
 	{
 		auto file_name = file.path().filename();
 
-		cup = filename_to_cup(file_name.string().c_str());
+		spotpass* new_spotpass = new spotpass();
+		cup = new_spotpass->load(file.path().string().c_str());
+
 		LOG_DEBUG("Cup = {}, file = {}", cup, file_name.string().c_str());
 
-		if (cup >= 0 && cup <= 8)
+		if (cup >= 1 && cup <= 8)
 		{
-			if (spotpass_files[cup]) delete spotpass_files[cup];
-			spotpass_files[cup] = new spotpass();
-			spotpass_files[cup]->load(file.path().string().c_str());
-			spotpass_files[cup]->cup_id = cup;
+			if (spotpass_files[cup - 1]) delete spotpass_files[cup - 1];
+			spotpass_files[cup - 1] = new_spotpass;
 		}
 	}
 }
 
 app::~app()
 {
-	for (int i = 0; i < 8; i++) delete spotpass_files[i];
+	for (int i = 0; i < 8; i++) if (spotpass_files[i]) delete spotpass_files[i];
 }

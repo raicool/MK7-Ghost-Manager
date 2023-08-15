@@ -36,7 +36,7 @@ void panel::render()
 
 			if (ImGui::BeginMenu("Windows"))
 			{
-				ImGui::CheckboxFlags("Cups List", &panel_flags, panels::PANEL_CUPS_LIST);
+				ImGui::CheckboxFlags("Cups List",  &panel_flags, panels::PANEL_CUPS_LIST);
 				ImGui::CheckboxFlags("Ghost List", &panel_flags, panels::PANEL_GHOST_LIST);
 				ImGui::EndMenu();
 			}
@@ -63,7 +63,7 @@ void panel::render()
 					if (ImGui::BeginTabItem(cup_name[i]))
 					{
 						is_cup_selected = true;
-						cup = i; 
+						cup = app_ptr->spotpass_files[i]->cup_id;
 
 						items[0] = (char*)course_name[cup_courses[i][0]];
 						items[1] = (char*)course_name[cup_courses[i][1]];
@@ -80,13 +80,13 @@ void panel::render()
 			static int idx = 0;
 			if (is_cup_selected)
 			{
-				if (ImGui::ListBox("Courses", &idx, items, 4, 4)) course = cup_courses[cup][idx];
+				if (ImGui::ListBox("Courses", &idx, items, 4, 4)) course = cup_courses[cup - 1][idx];
 
 				ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
 
 				if (ImGui::Button("Add Ghost"))
 				{
-					if (app_ptr->spotpass_files[cup]->add_ghost(open_file()) == false)
+					if (app_ptr->spotpass_files[cup - 1]->add_ghost(open_file()) == false)
 					{
 						ImGui::PushID("Load Failed");
 						ImGui::OpenPopup("Load Failed");
@@ -121,9 +121,9 @@ void panel::render()
 
 		if (ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration))
 		{
-			if (app_ptr->spotpass_files[cup])
+			if (app_ptr->spotpass_files[cup - 1])
 			{
-				spotpass& current_cup = *app_ptr->spotpass_files[cup];
+				spotpass& current_cup = *app_ptr->spotpass_files[cup - 1];
 
 				ImGui::Spacing();
 
