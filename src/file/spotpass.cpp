@@ -78,11 +78,6 @@ uint8_t spotpass::load(const char* dir)
 	return cup_id;
 }
 
-void spotpass::reload()
-{
-	load(file_directory.c_str());
-}
-
 // replaces ghost data at a given offset with new data from replay file
 void spotpass::overwrite_ghost(uint32_t offset, const char* ghost_dir)
 {
@@ -174,4 +169,9 @@ bool spotpass::add_ghost(const char* ghost_dir)
 	// reload ghost since its overwritten
 	reload();
 	return true;
+}
+
+void spotpass::reload()
+{
+	load(file_directory.c_str());
 }
