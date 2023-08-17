@@ -25,13 +25,12 @@ jobs:
       run: |
         sudo apt-get install libsdl2-dev
         sudo apt-get install libsdl2-image-dev
-    - name: Checkout submodules
-      # You may pin to the exact commit or the version.
-      # uses: textbook/git-checkout-submodule-action@0cb23c7e6a67085e1dc5e884920bd620f7b9c469
-      uses: textbook/git-checkout-submodule-action@2.1.1
+        sudo apt-get install libgtkmm-2.4-dev
+        
+    - uses: actions/checkout@v3
       with:
-        # Set the --remote flag
-        remote: true # optional
+        submodules: true
+
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
