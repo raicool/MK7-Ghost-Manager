@@ -1,5 +1,7 @@
 #pragma once 
 
+#include "common/utils.h"
+
 #define CLOCK std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 struct frame
@@ -19,7 +21,7 @@ struct frame
 				lag = 0;
 				delta = (delta - fr) * -1;
 
-				Sleep(delta);
+				process_sleep(delta);
 			}
 			else // if process is behind or lagging
 			{

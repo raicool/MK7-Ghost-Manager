@@ -9,28 +9,7 @@
 
 static char dir_buf[256]{ 0 };
 
-template<typename T>
-vector2<T> texture_size(std::string identifier)
-{
-	int32_t checkw, checkh;
-	SDL_QueryTexture(texture::get_texture(identifier), NULL, NULL, &checkw, &checkh);
-//	LOG_TRACE("Texture dimensions: {}, {}", checkw, checkh);
-
-	return vector2<T>{ (T)checkw, (T)checkh };
-}
-
-template<typename T>
-vector2<T> texture_size(SDL_Texture* texture_ptr)
-{
-	int32_t checkw, checkh;
-	SDL_QueryTexture(texture_ptr, NULL, NULL, &checkw, &checkh);
-	//	LOG_TRACE("Texture dimensions: {}, {}", checkw, checkh);
-
-	return vector2<T>{ (T)checkw, (T)checkh };
-}
-
 // file management
-
 /*
 *	returns an fstream from an open file dialog
 *	@param mode - ios open mode flags (ex: std::ios::binary | std::ios::in)
@@ -67,6 +46,10 @@ static const char* open_file()
 	f.Flags        = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 	GetOpenFileNameA(&f) ? LOG_INFO("file \"{}\" found", dir_buf) : void();
 #endif
+#ifdef __LINUX__
+	FILE* f = popen("zenity --file-selection", "r");
+	fgets(dir_buf, 256, f);
+#endif
 	return dir_buf;
 }
 
@@ -77,7 +60,7 @@ static const char* open_folder()
 	bi.pidlRoot       = NULL;
 	bi.pszDisplayName = dir_buf; // Address of a buffer to receive the display name of the folder selected by the user
 	bi.lpszTitle      = "Select a folder with spotpass files."; // Title of the dialog
-	bi.ulFlags        = 0;
+	bi.ulFlags        = BIF_USENEWUI;
 	bi.lpfn           = NULL;
 	bi.lParam         = 0;
 	bi.iImage         = -1;
@@ -87,6 +70,10 @@ static const char* open_folder()
 	{
 		SHGetPathFromIDList(lpItem, dir_buf);
 	}
+#endif
+#ifdef __LINUX__
+	FILE* f = popen("zenity --file-selection --directory", "r");
+	fgets(dir_buf, 256, f);
 #endif
 	return dir_buf;
 }
@@ -276,4 +263,14 @@ inline T swap_endian(T value)
 	result |= (value & 0xff000000) >> 24;
 
 	return result;
+}
+
+inline void process_sleep(uint32_t ms)
+{
+#ifdef WIN32
+	Sleep(ms);
+#endif
+#ifdef __LINUX__
+	usleep(ms / 1000);
+#endif
 }

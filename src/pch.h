@@ -7,10 +7,17 @@
 #include <fstream>
 #include <filesystem>
 #include <codecvt>
+#include <stdio.h>
 
 // Windows
+#ifdef WIN32
 #include <Windows.h>
 #include <shlobj_core.h>
+#endif
+// Linux
+#ifdef __linux__ 
+#include <unistd.h>
+#endif
 
 // SDL
 #define SDL_MAIN_HANDLED
