@@ -26,7 +26,7 @@ void window::init(app* application, const char* window_title, uint16_t win_width
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
 	ImGui_ImplSDL2_InitForSDLRenderer(sdlwindow, sdlrenderer);
-	ImGui_ImplSDLRenderer_Init(sdlrenderer);
+	ImGui_ImplSDLRenderer2_Init(sdlrenderer);
 
 	// TODO: find 3ds' entire unicode range
 	ImGuiIO& io = ImGui::GetIO();
@@ -51,7 +51,7 @@ void window::update()
 void window::render_panels()
 {
 	ImGui_ImplSDL2_NewFrame(sdlwindow);
-	ImGui_ImplSDLRenderer_NewFrame();
+	ImGui_ImplSDLRenderer2_NewFrame();
 	ImGui::NewFrame();
 
 	//ImGui::ShowDemoWindow(nullptr);
@@ -59,5 +59,5 @@ void window::render_panels()
 	panels->render();
 
 	ImGui::Render();
-	ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+	ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
 }

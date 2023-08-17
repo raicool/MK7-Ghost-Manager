@@ -17,8 +17,8 @@ file(GLOB IMGUI_SOURCE
     "dep/imgui/imgui_tables.cpp"
     "dep/imgui/imgui_draw.cpp"
     "dep/imgui/imgui_demo.cpp"
-    "dep/imgui/backends/imgui_impl_sdlrenderer.cpp"
-    "dep/imgui/backends/imgui_impl_sdl.cpp"
+    "dep/imgui/backends/imgui_impl_sdlrenderer2.cpp"
+    "dep/imgui/backends/imgui_impl_sdl2.cpp"
 )
 
 # osdialog, for specifically linux builds
