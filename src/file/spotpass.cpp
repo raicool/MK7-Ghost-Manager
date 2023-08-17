@@ -69,7 +69,7 @@ uint8_t spotpass::load(const char* dir)
 
 			offset += 4;
 			char mii_name[0x14];
-			bin_read<char>(mii_name, spotpass_data, offset, (unsigned)0x14);
+			bin_read<char>(mii_name, spotpass_data, offset, 0x14);
 			ghosts[ghost_count]->player_name = utf16be(mii_name, 0x14).c_str();
 			ghost_count++;
 		}

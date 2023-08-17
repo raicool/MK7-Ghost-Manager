@@ -14,7 +14,7 @@
 #define COL_RED   ImVec4{   1, 0.5, 0.5, 1 }
 #define COL_WHITE ImVec4{   1,   1,   1, 1 }
 
-static std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_conv;
+std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf8_conv;
 
 void panel::render()
 {
@@ -156,7 +156,7 @@ void panel::draw_ghost_details(ghost* _ghost)
 {
 	ImGui::Image(app_ptr->texture_manager.driver[_ghost->character_id], { 64, 64 });
 	ImGui::SameLine();
-	ImGui::Text(utf8_conv.to_bytes(_ghost->player_name).c_str());
+	ImGui::Text("%s", utf8_conv.to_bytes(_ghost->player_name).c_str());
 
 	ImGui::SameLine(ImGui::GetWindowWidth() / 4); ImGui::Image(app_ptr->texture_manager.body[_ghost->kart_id], { 128, 64 });
 	ImGui::SameLine(); ImGui::Image(app_ptr->texture_manager.tire[_ghost->tire_id], { 128, 64 });

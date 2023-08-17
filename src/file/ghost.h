@@ -73,7 +73,7 @@ struct ghost
 	uint32_t file_offset = 0; //< where ghost's data starts in spotpass file (if applicable)
 	uint32_t ghost_id    = 0; //< where ghost's data starts in spotpass file (if applicable)
 
-	std::wstring player_name = L"Player";
+	std::basic_string<char16_t> player_name;
 
 	bool fp_flag; //< true if ghost used first person 80% or more
 
