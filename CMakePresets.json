@@ -66,7 +66,22 @@
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-release",
+      "displayName": "linux-release",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/bin/${presetName}",
+      "installDir": "${sourceDir}/bin/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
       },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
     },
     {
       "name": "macos-debug",

@@ -91,7 +91,9 @@ static const char* create_file()
 	GetSaveFileNameA(&f) ? LOG_INFO("file \"{}\" created", dir_buf) : void();
 	return dir_buf;
 #endif
+#ifdef __LINUX__
 	return osdialog_file(OSDIALOG_SAVE, ".", NULL, NULL);
+#endif
 }
 
 static std::size_t folder_file_count(const char* path)
