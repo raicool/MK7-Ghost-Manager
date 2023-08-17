@@ -7,7 +7,7 @@
 
 void app::init()
 {
-	sdlwindow.init(this, "MK7 Spotpass Ghost Manager v0.2.1", 848, 480, 144, SDL_WINDOW_RESIZABLE);
+	sdlwindow.init(this, "MK7 Spotpass Ghost Manager v0.2.1", 848, 480, 0, SDL_WINDOW_RESIZABLE);
 
 	logger::init_logger();
 
@@ -56,8 +56,6 @@ void app::open_spotpass_file()
 	{
 		LOG_ERROR("load error : could not get cup_id from file name \"{}\"", file_dir);
 	}
-
-	
 }
 
 void app::open_spotpass_folder()

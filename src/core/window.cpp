@@ -11,7 +11,7 @@ void window::init(app* application, const char* window_title, uint16_t win_width
 	framerate = win_framerate;
 
 	sdlwindow = SDL_CreateWindow(window_title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, win_width, win_height, flags);
-	sdlrenderer = SDL_CreateRenderer(sdlwindow, -1, SDL_RENDERER_ACCELERATED);
+	sdlrenderer = SDL_CreateRenderer(sdlwindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	SDL_SetHint(SDL_HINT_RENDER_LOGICAL_SIZE_MODE, "overscan");
 
 	if (!sdlwindow)
