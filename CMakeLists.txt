@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.8)
 project("ghost-manager" LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
+#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
 # add c++ files
 file(GLOB_RECURSE CXX_SOURCE "src/*.cpp")
@@ -35,18 +35,12 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE "src/pch.h")
 
 # packages
 # sdl2
-find_package(SDL2_LIBRARY NAMES SDL2)
-#link_libraries(SDL2::main)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARY})
-target_link_directories(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
+find_package(SDL2 REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2main SDL2::SDL2)
 
 # sdl2_image
 find_package(SDL2_image REQUIRED)
-#link_libraries(SDL2::Image)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_IMAGE_LIBRARY})
-target_link_directories(${PROJECT_NAME} PRIVATE ${SDL2_IMAGE_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_IMAGE_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2_image::SDL2_image)
 
 # unix packages
 if (UNIX)
