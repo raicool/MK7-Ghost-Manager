@@ -7,3 +7,9 @@
 [submodule "dep/osdialog"]
 	path = dep/osdialog
 	url = https://github.com/AndrewBelt/osdialog
+[submodule "dep/imgui"]
+	path = dep/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "dep/spdlog"]
+	path = dep/spdlog
+	url = https://github.com/gabime/spdlog
