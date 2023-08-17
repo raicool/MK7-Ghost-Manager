@@ -30,37 +30,43 @@ if (UNIX)
     set_source_files_properties(${OSDIALOG_SOURCE} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 endif()
 
-add_executable(${PROJECT_NAME} ${OSDIALOG_SOURCE} ${CXX_SOURCE} ${IMGUI_SOURCE} )
+add_executable(${PROJECT_NAME} ${OSDIALOG_SOURCE} ${CXX_SOURCE} ${IMGUI_SOURCE})
 target_precompile_headers(${PROJECT_NAME} PRIVATE "src/pch.h")
 
 # packages
 # sdl2
 find_package(SDL2_LIBRARY NAMES SDL2)
-target_link_libraries(${PROJECT_NAME} SDL2::Main)
-#add_library(SDL2::main STATIC IMPORTED GLOBAL)
+#link_libraries(SDL2::main)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARY})
+target_link_directories(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
 
 # sdl2_image
 find_package(SDL2_image REQUIRED)
-target_link_libraries(${PROJECT_NAME} SDL2::Image)
-#add_library(SDL2::Image STATIC IMPORTED GLOBAL)
+#link_libraries(SDL2::Image)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_IMAGE_LIBRARY})
+target_link_directories(${PROJECT_NAME} PRIVATE ${SDL2_IMAGE_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_IMAGE_INCLUDE_DIRS})
 
-# gtkmm 2.4 and osdialog
+# unix packages
 if (UNIX)
+    # gtkmm 2.4
     find_package(PkgConfig)
     pkg_check_modules(GTKMM gtkmm-2.4)
-    target_link_libraries(${PROJECT_NAME} ${GTKMM_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${GTKMM_LIBRARIES})
     target_link_directories(${PROJECT_NAME} PRIVATE ${GTKMM_LIBRARY_DIRS})
     target_include_directories(${PROJECT_NAME} PRIVATE ${GTKMM_INCLUDE_DIRS})
+    # osdialog
+    target_include_directories(${PROJECT_NAME} PRIVATE "dep/osdialog")
 endif()
 
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(${PROJECT_NAME} PRIVATE 
     "src"
     "dep/imgui"
-    "dep/osdialog"
     "dep/spdlog/include"
 )
 
 add_custom_command(
-    TARGET ${PROJECT_NAME} PRE_BUILD
+    TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/res" "${CMAKE_BINARY_DIR}/res"
 )
