@@ -21,6 +21,7 @@ uint8_t spotpass::load(const char* dir)
 	if (file_size != 0xCAFE4)
 	{
 		LOG_ERROR("load error : the given spotpass file was the incorrect size!");
+		spotpass_data.close();
 		return -1;
 	}
 
@@ -143,6 +144,7 @@ bool spotpass::add_ghost(const char* ghost_dir)
 		if (offset >= next_course_ghost_offset)
 		{
 			LOG_ERROR("ghost add error : there is no more room for a new ghost in this course, please delete ghosts to make space!");
+			ghost_data.close();
 			return false;
 		}
 
