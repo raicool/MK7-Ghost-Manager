@@ -55,8 +55,8 @@
     },
     {
       "name": "linux-debug",
-      "displayName": "Linux Debug",
-      "generator": "Ninja",
+      "displayName": "linux-debug",
+      "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/bin/${presetName}",
       "installDir": "${sourceDir}/bin/install/${presetName}",
       "cacheVariables": {
@@ -67,11 +67,6 @@
         "lhs": "${hostSystemName}",
         "rhs": "Linux"
       },
-      "vendor": {
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
-          "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
-        }
-      }
     },
     {
       "name": "macos-debug",

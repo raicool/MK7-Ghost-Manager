@@ -17,6 +17,7 @@
 // Linux
 #ifdef __linux__ 
 #include <unistd.h>
+#include <osdialog.h>
 #endif
 
 // SDL

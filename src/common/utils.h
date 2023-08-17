@@ -45,12 +45,11 @@ static const char* open_file()
 	f.nFilterIndex = 1;
 	f.Flags        = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 	GetOpenFileNameA(&f) ? LOG_INFO("file \"{}\" found", dir_buf) : void();
+	return dir_buf;
 #endif
 #ifdef __LINUX__
-	FILE* f = popen("zenity --file-selection", "r");
-	fgets(dir_buf, 256, f);
+	return osdialog_file(OSDIALOG_OPEN, NULL, NULL, NULL);
 #endif
-	return dir_buf;
 }
 
 static const char* open_folder()
@@ -64,18 +63,16 @@ static const char* open_folder()
 	bi.lpfn           = NULL;
 	bi.lParam         = 0;
 	bi.iImage         = -1;
-
 	LPITEMIDLIST lpItem = SHBrowseForFolder(&bi);
 	if (lpItem != NULL)
 	{
 		SHGetPathFromIDList(lpItem, dir_buf);
 	}
+	return dir_buf;
 #endif
 #ifdef __LINUX__
-	FILE* f = popen("zenity --file-selection --directory", "r");
-	fgets(dir_buf, 256, f);
+	return osdialog_file(OSDIALOG_OPEN_DIR, NULL, NULL, NULL);
 #endif
-	return dir_buf;
 }
 
 /*
@@ -92,8 +89,9 @@ static const char* create_file()
 	f.nFilterIndex = 1;
 	f.Flags = OFN_PATHMUSTEXIST;
 	GetSaveFileNameA(&f) ? LOG_INFO("file \"{}\" created", dir_buf) : void();
-#endif
 	return dir_buf;
+#endif
+	return osdialog_file(OSDIALOG_SAVE, ".", NULL, NULL);
 }
 
 static std::size_t folder_file_count(const char* path)
@@ -115,10 +113,10 @@ static void bin_write(T* src, std::fstream& dst, size_t size = sizeof(T))
 
 /*
 *	writes a set amount of bytes in a ofstream as a const char*
-*	@param src  - location to copy data from to file
-*   @param dst  - file's output stream
+*	@param src    - location to copy data from to file
+*   @param dst    - file's output stream
 *   @param offset - offset of the data in file, in bytes (optional, set to 0 if not specified)
-*   @param size - size of the data in bytes (optional, set to sizeof(T) if not specified)
+*   @param size   - size of the data in bytes (optional, set to sizeof(T) if not specified)
 */
 template<typename T>
 static void bin_write(T* src, std::fstream& dst, uint32_t offset = 0, size_t size = sizeof(T))
@@ -227,16 +225,15 @@ static int round_multiple(int n, int mul)
 	return result;
 }
 
-static std::wstring utf16be(const char* input, uint16_t size)
+static std::u16string utf16be(const char* input, uint16_t size)
 {
 	if (size % 2 != 0) assert("char array size must be even");
 
-	std::wstring result(size / 2, 0); 
+	std::u16string result(size / 2, 0);
 	wide_char_t _test;
 
 	for (int i = 0; i < result.size(); i++)
 	{	
-		
 		_test.lower = input[i * 2 + 1];
 		_test.upper = input[i * 2];
 		result[i] = _test.wide;

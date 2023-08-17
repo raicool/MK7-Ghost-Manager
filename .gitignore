@@ -18,6 +18,7 @@
 mono_crash.*
 
 # Build results
+out/
 bin/
 x86-debug/
 x64-debug/

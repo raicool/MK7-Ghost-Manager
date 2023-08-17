@@ -2,8 +2,6 @@
 
 #include "common/utils.h"
 
-#define CLOCK std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-
 struct frame
 {
 	int32_t before = 0; //< time before frame start

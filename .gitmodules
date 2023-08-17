@@ -4,9 +4,6 @@
 [submodule "deps/spdlog"]
 	path = dep/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "osdialog"]
-	path = osdialog
-	url = https://github.com/AndrewBelt/osdialog
 [submodule "dep/osdialog"]
 	path = dep/osdialog
 	url = https://github.com/AndrewBelt/osdialog
