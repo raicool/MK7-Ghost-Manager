@@ -1,5 +1,6 @@
 #pragma once
 
+struct mii;
 struct ghost
 {
 	uint32_t file_offset = 0; //< where ghost's data starts in spotpass file (if applicable)
@@ -19,4 +20,6 @@ struct ghost
 	uint8_t kart_id;
 	uint8_t tire_id;
 	uint8_t glider_id;
+
+	mii mii_data;
 };

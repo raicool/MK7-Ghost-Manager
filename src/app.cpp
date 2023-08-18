@@ -63,6 +63,8 @@ void app::open_spotpass_folder()
 	uint8_t cup = 0;
 	const char* folder_dir = open_folder();
 
+	if (!folder_dir) return;
+
 	for (const std::filesystem::directory_entry& file : std::filesystem::recursive_directory_iterator(folder_dir))
 	{
 		auto file_name = file.path().filename();

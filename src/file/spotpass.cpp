@@ -53,24 +53,26 @@ uint8_t spotpass::load(const char* dir)
 
 			offset += 4;
 			bin_read<uint32_t>(&u32buffer, spotpass_data, &offset);
-			ghosts[ghost_count]->fp_flag      = (u32buffer >> 27) & 0x01;
-			ghosts[ghost_count]->finished_ms  = (u32buffer >> 14) & 0x3ff;
-			ghosts[ghost_count]->finished_sec = (u32buffer >> 7)  & 0x7f;
-			ghosts[ghost_count]->finished_min = (u32buffer >> 0)  & 0x7f;
-
+			ghosts[ghost_count]->finished_min = (u32buffer >> 0)  & 0x7f;  // 7 bit
+			ghosts[ghost_count]->finished_sec = (u32buffer >> 7)  & 0x7f;  // 7 bit
+			ghosts[ghost_count]->finished_ms  = (u32buffer >> 14) & 0x3ff; // 10 bit
+			ghosts[ghost_count]->fp_flag      = (u32buffer >> 27) & 0x01;  // 1 bit
+			
 			offset += 12;
-			// do some bit manipulation magic to get character and kart config
 			bin_read<uint32_t>(&u32buffer, spotpass_data, offset);
-			ghosts[ghost_count]->course_id    = (u32buffer >> 0)  & 0x3f;
-			ghosts[ghost_count]->character_id = (u32buffer >> 6)  & 0x0f;
-			ghosts[ghost_count]->kart_id      = (u32buffer >> 11) & 0x0f;
-			ghosts[ghost_count]->tire_id      = (u32buffer >> 16) & 0x0f;
-			ghosts[ghost_count]->glider_id    = (u32buffer >> 20) & 0x0f;
+			ghosts[ghost_count]->course_id    = (u32buffer >> 0)  & 0x3f; // 6 bit
+			ghosts[ghost_count]->character_id = (u32buffer >> 6)  & 0x0f; // 5 bit
+			ghosts[ghost_count]->kart_id      = (u32buffer >> 11) & 0x0f; // 5 bit
+			ghosts[ghost_count]->tire_id      = (u32buffer >> 16) & 0x0f; // 4 bit
+			ghosts[ghost_count]->glider_id    = (u32buffer >> 20) & 0x0f; // 4 bit
 
 			offset += 4;
 			char mii_name[0x14];
-			bin_read<char>(mii_name, spotpass_data, offset, 0x14);
+			bin_read<char>(mii_name, spotpass_data, &offset, 0x14);
 			ghosts[ghost_count]->player_name = utf16be(mii_name, 0x14).c_str();
+
+			offset += 4;
+			bin_read<mii>(&ghosts[ghost_count]->mii_data, spotpass_data, offset);
 			ghost_count++;
 		}
 	}
