@@ -10,9 +10,12 @@ credits to B_squo for replay documentation https://twitter.com/B_squo
 
 
 ## Usage
-the ghost manager requires sdl2 and sdl2_image to be installed
 ### Ubuntu
+the ghost manager requires sdl2 and sdl2_image to be installed
 ```
 sudo apt-get install libsdl2-2.0-0
 sudo apt-get install libsdl2-image-2.0-0
 ```
+
+### Windows
+the ghost manager required Visual C++ 2015 and 2019 redistributables to be installed
