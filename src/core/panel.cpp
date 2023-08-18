@@ -24,25 +24,23 @@ void panel::render()
 
 	if (panel_flags & panels::PANEL_MENU_BAR)
 	{
-		if (ImGui::BeginMainMenuBar())
+		if (ImGui::BeginMainMenuBar());
+		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("open spotpass save folder")) app_ptr->open_spotpass_folder();
-				if (ImGui::MenuItem("open spotpass save file"))   app_ptr->open_spotpass_file();
+			if (ImGui::MenuItem("Open spotpass save folder")) app_ptr->open_spotpass_folder();
+			if (ImGui::MenuItem("Open spotpass save file"))   app_ptr->open_spotpass_file();
 
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("Windows"))
-			{
-				ImGui::CheckboxFlags("Cups List",  &panel_flags, panels::PANEL_CUPS_LIST);
-				ImGui::CheckboxFlags("Ghost List", &panel_flags, panels::PANEL_GHOST_LIST);
-				ImGui::EndMenu();
-			}
-
-			ImGui::EndMainMenuBar();
+			ImGui::EndMenu();
 		}
+
+		if (ImGui::BeginMenu("Windows"))
+		{
+			ImGui::CheckboxFlags("Cups List", &panel_flags, panels::PANEL_CUPS_LIST);
+			ImGui::CheckboxFlags("Ghost List", &panel_flags, panels::PANEL_GHOST_LIST);
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMainMenuBar();
 	}
 
 	if (panel_flags & panels::PANEL_CUPS_LIST)
@@ -52,103 +50,102 @@ void panel::render()
 
 		static char* items[4];
 
-		if (ImGui::Begin("Cups", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration))
+		ImGui::Begin("Cups", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration);
+
+		for (int i = 0; i < 8; i++)
 		{
-			for (int i = 0; i < 8; i++)
+			if (app_ptr->spotpass_files[i])
 			{
-				if (app_ptr->spotpass_files[i])
+				ImGui::BeginTabBar("Loaded Cups", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_Reorderable);
+
+				if (ImGui::BeginTabItem(cup_name[i]))
 				{
-					ImGui::BeginTabBar("Loaded Cups", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_Reorderable);
+					is_cup_selected = true;
+					cup = app_ptr->spotpass_files[i]->cup_id;
 
-					if (ImGui::BeginTabItem(cup_name[i]))
-					{
-						is_cup_selected = true;
-						cup = app_ptr->spotpass_files[i]->cup_id;
+					items[0] = (char*)course_name[cup_courses[i][0]];
+					items[1] = (char*)course_name[cup_courses[i][1]];
+					items[2] = (char*)course_name[cup_courses[i][2]];
+					items[3] = (char*)course_name[cup_courses[i][3]];
 
-						items[0] = (char*)course_name[cup_courses[i][0]];
-						items[1] = (char*)course_name[cup_courses[i][1]];
-						items[2] = (char*)course_name[cup_courses[i][2]];
-						items[3] = (char*)course_name[cup_courses[i][3]];
-
-						ImGui::EndTabItem();
-					}
-
-					ImGui::EndTabBar();
+					ImGui::EndTabItem();
 				}
+
+				ImGui::EndTabBar();
 			}
+		}
 
-			static int idx = 0;
-			if (is_cup_selected)
-			{
-				if (ImGui::ListBox("Courses", &idx, items, 4, 4)) course = cup_courses[cup - 1][idx];
-
-				ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
-
-				if (ImGui::Button("Add Ghost"))
-				{
-					if (app_ptr->spotpass_files[cup - 1]->add_ghost(open_file()) == false)
-					{
-						ImGui::PushID("Load Failed");
-						ImGui::OpenPopup("Load Failed");
-						ImGui::PopID();
-						ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-						ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-					}
-				}
-			}
+		static int idx = 0;
+		if (is_cup_selected)
+		{
+			if (ImGui::ListBox("Courses", &idx, items, 4, 4)) course = cup_courses[cup - 1][idx];
 
 			ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
-			ImGui::Checkbox("Display all courses within cup", &show_all_course);
 
-			ImGui::PushID("Load Failed"); 
-			if (ImGui::BeginPopupModal("Load Failed", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+			if (ImGui::Button("Add Ghost"))
 			{
-				ImGui::Text("Failed to add ghost. see console for more details.");
-				if (ImGui::Button("OK")) { ImGui::CloseCurrentPopup(); }
-
-				ImGui::EndPopup();
+				if (app_ptr->spotpass_files[cup - 1]->add_ghost(open_file()) == false)
+				{
+					ImGui::PushID("Load Failed");
+					ImGui::OpenPopup("Load Failed");
+					ImGui::PopID();
+					ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+					ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+				}
 			}
-			ImGui::PopID();
-
-			ImGui::End();
 		}
+
+		ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
+		ImGui::Checkbox("Display all courses within cup", &show_all_course);
+
+		ImGui::PushID("Load Failed");
+		if (ImGui::BeginPopupModal("Load Failed", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::Text("Failed to add ghost. see console for more details.");
+			if (ImGui::Button("OK")) { ImGui::CloseCurrentPopup(); }
+
+			ImGui::EndPopup();
+		}
+		ImGui::PopID();
+
+		ImGui::End();
 	}
 
 	if (panel_flags & panels::PANEL_GHOST_LIST)
 	{
 		ImGui::SetNextWindowSize({ w - (w / 3.0f), h - 20.0f });
 		ImGui::SetNextWindowPos({ 1 + (w / 3.0f), 20 });
+		ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration);
 
-		if (ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration))
+		/*
+		*	Cup ghosts will be rendered here
+		*/
+		if (app_ptr->spotpass_files[cup - 1])
 		{
-			if (app_ptr->spotpass_files[cup - 1])
+			spotpass& current_cup = *app_ptr->spotpass_files[cup - 1];
+
+			ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH);
+
+			for (int i = 0; i < current_cup.ghost_count; i++)
 			{
-				spotpass& current_cup = *app_ptr->spotpass_files[cup - 1];
-
-				ImGui::Spacing();
-
-				ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH);
-				for (int i = 0; i < current_cup.ghost_count; i++)
+				if (current_cup.ghosts[i]->course_id == course || show_all_course)
 				{
-					if (current_cup.ghosts[i]->course_id == course || show_all_course)
-					{
-						ImGui::PushID(i);
-						ImGui::TableNextRow();
-						ImGui::TableSetColumnIndex(0);
+					ImGui::PushID(i);
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
 
-						draw_ghost_details(current_cup.ghosts[i]);
+					draw_ghost_details(current_cup.ghosts[i]);
 
-						if (ImGui::Button("Delete Ghost"))    current_cup.delete_ghost(current_cup.ghosts[i]);
-						if (ImGui::Button("Overwrite Ghost")) current_cup.overwrite_ghost(current_cup.ghosts[i]->file_offset, open_file());
+					if (ImGui::Button("Delete Ghost"))    current_cup.delete_ghost(current_cup.ghosts[i]);
+					if (ImGui::Button("Overwrite Ghost")) current_cup.overwrite_ghost(current_cup.ghosts[i]->file_offset, open_file());
 
-						ImGui::PopID();
-					}
+					ImGui::PopID();
 				}
-				ImGui::EndTable();
 			}
-
-			ImGui::End();
+			ImGui::EndTable();
 		}
+
+		ImGui::End();
 	}
 }
 
@@ -176,10 +173,16 @@ void panel::draw_ghost_details(ghost* _ghost)
 		}
 	}
 
-
 	if (ImGui::TreeNode("Name Details"))
 	{
 		ImGui::DebugTextEncoding(utf8_conv.to_bytes(_ghost->player_name).c_str());
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Mii Details"))
+	{
+		ImGui::Text("System ID = %lu", _ghost->mii_data.sys_id);
+		ImGui::Text("Region = %i", _ghost->mii_data.region);
 		ImGui::TreePop();
 	}
 
