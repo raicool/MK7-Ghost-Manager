@@ -270,6 +270,6 @@ inline void process_sleep(uint32_t ms)
 	Sleep(ms);
 #endif
 #ifdef __LINUX__
-	usleep(ms / 1000);
+	usleep(ms * 1000);
 #endif
 }
