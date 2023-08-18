@@ -35,8 +35,12 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE "src/pch.h")
 
 # packages
 # sdl2
-find_package(SDL2 REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2main SDL2::SDL2)
+find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
+find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
+if(TARGET SDL2::SDL2main)
+    target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2main)
+endif()
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2)
 
 # sdl2_image
 find_package(SDL2_image REQUIRED)
