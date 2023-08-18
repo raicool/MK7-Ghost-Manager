@@ -37,23 +37,21 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE "src/pch.h")
 # sdl2
 find_package(SDL2_LIBRARY NAMES SDL2)
 target_link_libraries(${PROJECT_NAME} SDL2::Main)
-#add_library(SDL2::main STATIC IMPORTED GLOBAL)
 
 # sdl2_image
 find_package(SDL2_image REQUIRED)
 target_link_libraries(${PROJECT_NAME} SDL2::Image)
-#add_library(SDL2::Image STATIC IMPORTED GLOBAL)
 
 # unix packages
 if (UNIX)
+    # osdialog
+    target_include_directories(${PROJECT_NAME} PRIVATE "dep/osdialog")
     # gtkmm 2.4
     find_package(PkgConfig)
     pkg_check_modules(GTKMM gtkmm-2.4)
-    link_libraries(${PROJECT_NAME} ${GTKMM_LIBRARIES})
-    link_directories(${PROJECT_NAME} PRIVATE ${GTKMM_LIBRARY_DIRS})
-    include_directories(${PROJECT_NAME} PRIVATE ${GTKMM_INCLUDE_DIRS})
-    # osdialog
-    target_include_directories(${PROJECT_NAME} PRIVATE "dep/osdialog")
+    target_link_libraries(${PROJECT_NAME} ${GTKMM_LIBRARIES})
+    target_link_directories(${PROJECT_NAME} PUBLIC ${GTKMM_LIBRARY_DIRS})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${GTKMM_INCLUDE_DIRS})
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
