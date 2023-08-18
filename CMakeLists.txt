@@ -49,9 +49,9 @@ if (UNIX)
     # gtkmm 2.4
     find_package(PkgConfig)
     pkg_check_modules(GTKMM gtkmm-2.4)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${GTKMM_LIBRARIES})
-    target_link_directories(${PROJECT_NAME} PRIVATE ${GTKMM_LIBRARY_DIRS})
-    target_include_directories(${PROJECT_NAME} PRIVATE ${GTKMM_INCLUDE_DIRS})
+    link_libraries(${PROJECT_NAME} ${GTKMM_LIBRARIES})
+    link_directories(${PROJECT_NAME} PRIVATE ${GTKMM_LIBRARY_DIRS})
+    include_directories(${PROJECT_NAME} PRIVATE ${GTKMM_INCLUDE_DIRS})
     # osdialog
     target_include_directories(${PROJECT_NAME} PRIVATE "dep/osdialog")
 endif()
