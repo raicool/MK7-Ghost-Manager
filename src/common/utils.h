@@ -67,8 +67,12 @@ static const char* open_folder()
 	if (lpItem != NULL)
 	{
 		SHGetPathFromIDList(lpItem, dir_buf);
+		return dir_buf;
 	}
-	return dir_buf;
+	else
+	{
+		return nullptr;
+	}
 #endif
 #ifdef __LINUX__
 	return osdialog_file(OSDIALOG_OPEN_DIR, NULL, NULL, NULL);
