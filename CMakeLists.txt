@@ -5,7 +5,7 @@ project("ghost-manager" LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
 # add c++ files
 file(GLOB_RECURSE CXX_SOURCE "src/*.cpp")
@@ -35,16 +35,14 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE "src/pch.h")
 
 # packages
 # sdl2
-find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
-find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
-if(TARGET SDL2::SDL2main)
-    target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2main)
-endif()
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2)
+find_package(SDL2_LIBRARY NAMES SDL2)
+target_link_libraries(${PROJECT_NAME} SDL2::Main)
+#add_library(SDL2::main STATIC IMPORTED GLOBAL)
 
 # sdl2_image
 find_package(SDL2_image REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::image)
+target_link_libraries(${PROJECT_NAME} SDL2::Image)
+#add_library(SDL2::Image STATIC IMPORTED GLOBAL)
 
 # unix packages
 if (UNIX)
