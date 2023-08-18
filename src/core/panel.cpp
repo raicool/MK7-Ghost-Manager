@@ -27,8 +27,8 @@ void panel::render()
 		if (ImGui::BeginMainMenuBar());
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("Open spotpass save folder")) app_ptr->open_spotpass_folder();
-			if (ImGui::MenuItem("Open spotpass save file"))   app_ptr->open_spotpass_file();
+			if (ImGui::MenuItem("Open SpotPass save folder")) app_ptr->open_spotpass_folder();
+			if (ImGui::MenuItem("Open SpotPass save file"))   app_ptr->open_spotpass_file();
 
 			ImGui::EndMenu();
 		}
@@ -49,6 +49,7 @@ void panel::render()
 		ImGui::SetNextWindowPos({ 1, 20 });
 
 		static char* items[4];
+		static int idx = 0;
 
 		ImGui::Begin("Cups", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration);
 
@@ -62,6 +63,7 @@ void panel::render()
 				{
 					is_cup_selected = true;
 					cup = app_ptr->spotpass_files[i]->cup_id;
+					course = cup_courses[i][idx];
 
 					items[0] = (char*)course_name[cup_courses[i][0]];
 					items[1] = (char*)course_name[cup_courses[i][1]];
@@ -75,7 +77,6 @@ void panel::render()
 			}
 		}
 
-		static int idx = 0;
 		if (is_cup_selected)
 		{
 			if (ImGui::ListBox("Courses", &idx, items, 4, 4)) course = cup_courses[cup - 1][idx];
@@ -126,7 +127,7 @@ void panel::render()
 
 			ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH);
 
-			for (int i = 0; i < current_cup.ghost_count; i++)
+			for (uint32_t i = 0; i < current_cup.ghost_count; i++)
 			{
 				if (current_cup.ghosts[i]->course_id == course || show_all_course)
 				{
@@ -181,12 +182,12 @@ void panel::draw_ghost_details(ghost* _ghost)
 
 	if (ImGui::TreeNode("Mii Details"))
 	{
-		ImGui::Text("System ID = %lu", _ghost->mii_data.sys_id);
-		ImGui::Text("Region = %i", _ghost->mii_data.region);
+		//ImGui::Text("System ID = %lu", _ghost->mii_data.sys_id);
+		//ImGui::Text("Region = %i", _ghost->mii_data.region);
 		ImGui::TreePop();
 	}
 
 	ImGui::Text("Course: %s", course_name[_ghost->course_id]);
 
-	ImGui::TextColored(ImVec4{ 1.0, 0.9, 0.1, 1.0 }, "Time: %i:%02i.%03i", _ghost->finished_min, _ghost->finished_sec, _ghost->finished_ms);
+	ImGui::TextColored(ImVec4{ 1.0f, 0.9f, 0.1f, 1.0f }, "Time: %i:%02i.%03i", _ghost->finished_min, _ghost->finished_sec, _ghost->finished_ms);
 }
