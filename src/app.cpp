@@ -7,11 +7,11 @@
 
 void app::init()
 {
-	sdlwindow.init(this, "MK7 Spotpass Ghost Manager v0.2.2", 848, 480, 0, SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE);
+	main_window.init(this, "MK7 Spotpass Ghost Manager v0.2.2", 848, 480, 0, SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE);
 
 	logger::init_logger();
 
-	texture_manager.current_renderer = sdlwindow.sdlrenderer;
+	texture_manager.current_renderer = main_window.sdlrenderer;
 	texture_manager.load_ghost_textures();
 }
 
@@ -19,22 +19,22 @@ int app::update()
 {
 	while (1)
 	{
-		sdlwindow.deltatime.before = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		main_window.deltatime.before = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-		SDL_PollEvent(&sdlwindow.sdlevent);
-		ImGui_ImplSDL2_ProcessEvent(&sdlwindow.sdlevent);
+		SDL_PollEvent(&main_window.sdlevent);
+		ImGui_ImplSDL2_ProcessEvent(&main_window.sdlevent);
 
-		switch (sdlwindow.sdlevent.type)
+		switch (main_window.sdlevent.type)
 		{
 		case SDL_QUIT:
 			return 0;
 		}
 
-		sdlwindow.update();
+		main_window.update();
 
-		SDL_RenderPresent(sdlwindow.sdlrenderer);
+		SDL_RenderPresent(main_window.sdlrenderer);
 
-		sdlwindow.deltatime.apply_delay((uint32_t)((1.0f / sdlwindow.framerate) * 1000.0f));
+		main_window.deltatime.apply_delay((uint32_t)((1.0f / main_window.framerate) * 1000.0f));
 	}
 }
 

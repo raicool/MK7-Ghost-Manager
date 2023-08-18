@@ -15,8 +15,8 @@ enum panels
 
 struct panel
 {
-	panel(window* sdlwindow)
-		: window_ptr(sdlwindow) {};
+	panel(window* main_window)
+		: window_ptr(main_window) {};
 
 	panel() {};
 

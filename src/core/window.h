@@ -12,7 +12,7 @@ struct window
 	panel* panels;
 
 	SDL_Event sdlevent;
-	SDL_Window* sdlwindow;
+	SDL_Window* main_window;
 	SDL_Renderer* sdlrenderer;
 
 	frame deltatime;

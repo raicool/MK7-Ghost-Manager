@@ -2,7 +2,7 @@
 #include "texture.h"
 
 #include "common/log.h"
-#include "file/ghost.h"
+#include "common/type.h"
 
 void texture::load_ghost_textures()
 {

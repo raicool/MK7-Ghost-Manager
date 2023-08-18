@@ -6,7 +6,7 @@
 
 struct app
 {
-	window sdlwindow;
+	window main_window;
 	texture texture_manager;
 
 	spotpass* spotpass_files[8]{ nullptr }; // 8 file managers for 8 different spotpass cups

@@ -10,11 +10,11 @@ void window::init(app* application, const char* window_title, uint16_t win_width
 	height = win_height;
 	framerate = win_framerate;
 
-	sdlwindow = SDL_CreateWindow(window_title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, win_width, win_height, flags);
-	sdlrenderer = SDL_CreateRenderer(sdlwindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	main_window = SDL_CreateWindow(window_title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, win_width, win_height, flags);
+	sdlrenderer = SDL_CreateRenderer(main_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	SDL_SetHint(SDL_HINT_RENDER_LOGICAL_SIZE_MODE, "overscan");
 
-	if (!sdlwindow)
+	if (!main_window)
 	{
 //		LOG_ERROR("SDL Window could not be created {}", SDL_GetError());
 	}
@@ -25,7 +25,7 @@ void window::init(app* application, const char* window_title, uint16_t win_width
 
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
-	ImGui_ImplSDL2_InitForSDLRenderer(sdlwindow, sdlrenderer);
+	ImGui_ImplSDL2_InitForSDLRenderer(main_window, sdlrenderer);
 	ImGui_ImplSDLRenderer2_Init(sdlrenderer);
 
 	// TODO: find 3ds' entire unicode range
@@ -50,7 +50,7 @@ void window::update()
 
 void window::render_panels()
 {
-	ImGui_ImplSDL2_NewFrame(sdlwindow);
+	ImGui_ImplSDL2_NewFrame(main_window);
 	ImGui_ImplSDLRenderer2_NewFrame();
 	ImGui::NewFrame();
 

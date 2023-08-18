@@ -9,7 +9,6 @@ uint8_t spotpass::load(const char* dir)
 {
 	uint32_t offset = 0;
 	uint32_t u32buffer = 0;
-	uint8_t  buffer = 0;
 
 	file_directory = dir;
 

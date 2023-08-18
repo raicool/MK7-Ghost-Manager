@@ -20,7 +20,7 @@ void panel::render()
 {
 	static int w;
 	static int h;
-	SDL_GetWindowSize(window_ptr->sdlwindow, &w, &h);
+	SDL_GetWindowSize(window_ptr->main_window, &w, &h);
 
 	if (panel_flags & panels::PANEL_MENU_BAR)
 	{
