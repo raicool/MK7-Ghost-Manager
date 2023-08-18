@@ -18,4 +18,4 @@ sudo apt-get install libsdl2-image-2.0-0
 ```
 
 ### Windows
-the ghost manager required Visual C++ 2015 and 2019 redistributables to be installed
+the ghost manager requires Visual C++ 2015 and 2019 redistributables to be installed
