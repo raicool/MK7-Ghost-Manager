@@ -44,7 +44,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2)
 
 # sdl2_image
 find_package(SDL2_image REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL2_image::SDL2_image)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::image)
 
 # unix packages
 if (UNIX)

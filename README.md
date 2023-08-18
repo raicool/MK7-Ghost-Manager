@@ -7,3 +7,12 @@ credits to B_squo for replay documentation https://twitter.com/B_squo
 ### TODO
 - [ ] get spotpass files directly from 3ds using luma debugger / an ftp server
 - [ ] auto update feature
+
+
+## Usage
+the ghost manager requires sdl2 and sdl2_image to be installed
+### Ubuntu
+```
+sudo apt-get install libsdl2-2.0-0
+sudo apt-get install libsdl2-image-2.0-0
+```
