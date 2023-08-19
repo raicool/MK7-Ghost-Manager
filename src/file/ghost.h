@@ -9,6 +9,7 @@ struct ghost
 	std::basic_string<char16_t> player_name;
 
 	bool fp_flag; //< true if ghost used first person 80% or more
+	uint8_t country_id;
 
 	uint16_t finished_ms;  //< finished ghost time milliseconds
 	uint16_t finished_sec; //< finished ghost time seconds

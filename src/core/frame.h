@@ -8,7 +8,7 @@ struct frame
 	int32_t lag    = 0; //< frame lag
 	int32_t delta  = 0; //< frame delta
 
-	void apply_delay(uint32_t fr)
+	void apply_delay(int32_t fr)
 	{
 		if (before != 0)
 		{

@@ -19,12 +19,10 @@ uint8_t spotpass::load(const char* dir)
 
 	if (file_size != 0xCAFE4)
 	{
-		LOG_ERROR("load error : the given spotpass file was the incorrect size!");
+		//LOG_ERROR("load error : the given spotpass file was the incorrect size!");
 		spotpass_data.close();
 		return -1;
 	}
-
-	// check if file exists
 	if (!spotpass_data.is_open())
 	{
 		LOG_ERROR("load error : could not open \"{}\"", dir);
@@ -72,7 +70,9 @@ uint8_t spotpass::load(const char* dir)
 			ghosts[ghost_count]->player_name = utf16be(mii_name, 0x14).c_str();
 
 			offset += 4;
-			bin_read<mii>(&ghosts[ghost_count]->mii_data, spotpass_data, offset);
+			bin_read<mii>(&ghosts[ghost_count]->mii_data, spotpass_data, &offset);
+			bin_read<uint8_t>(&ghosts[ghost_count]->country_id, spotpass_data, &offset);
+			LOG_DEBUG("country = {}", ghosts[ghost_count]->country_id);
 			ghost_count++;
 		}
 	}
@@ -123,9 +123,13 @@ void spotpass::delete_ghost(ghost* _ghost)
 	reload();
 }
 
+/*
+*	adds a ghost to a spotpass file
+*	returns true if there is room for the ghost, false if there is no room
+*/
 bool spotpass::add_ghost(const char* ghost_dir)
 {
-	std::fstream ghost_data(ghost_dir,    std::ios::in | std::ios::binary);
+	std::fstream ghost_data(ghost_dir, std::ios::in | std::ios::binary);
 
 	if (!ghost_data.is_open()) return false;
 

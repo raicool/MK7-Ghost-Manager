@@ -9,7 +9,6 @@ struct spotpass
 
 	std::fstream spotpass_data;
 	std::string file_directory;
-	uint32_t file_size;
 
 	uint32_t ghost_count = 0;
 	uint8_t cup_id;

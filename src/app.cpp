@@ -34,7 +34,7 @@ int app::update()
 
 		SDL_RenderPresent(main_window.sdlrenderer);
 
-		main_window.deltatime.apply_delay((uint32_t)((1.0f / main_window.framerate) * 1000.0f));
+		main_window.deltatime.apply_delay((int32_t)((1.0f / main_window.framerate) * 1000.0f));
 	}
 }
 
@@ -45,16 +45,11 @@ void app::open_spotpass_file()
 	spotpass* new_spotpass = new spotpass();
 	uint8_t cup = new_spotpass->load(file_dir);
 
-	LOG_DEBUG("Cup = {}, file = {}", cup, std::filesystem::path(file_dir).filename().string().c_str());
-
 	if (cup >= 0 && cup <= 8)
 	{
+		LOG_DEBUG("Cup = {}, file = {}", cup, std::filesystem::path(file_dir).filename().string().c_str());
 		if (spotpass_files[cup - 1]) delete spotpass_files[cup - 1];
 		spotpass_files[cup - 1] = new_spotpass;
-	}
-	else
-	{
-		LOG_ERROR("load error : could not get cup_id from file name \"{}\"", file_dir);
 	}
 }
 
@@ -72,10 +67,9 @@ void app::open_spotpass_folder()
 		spotpass* new_spotpass = new spotpass();
 		cup = new_spotpass->load(file.path().string().c_str());
 
-		LOG_DEBUG("Cup = {}, file = {}", cup, file_name.string().c_str());
-
 		if (cup >= 1 && cup <= 8)
 		{
+			LOG_DEBUG("Cup = {}, file = {}", cup, file_name.string().c_str());
 			if (spotpass_files[cup - 1]) delete spotpass_files[cup - 1];
 			spotpass_files[cup - 1] = new_spotpass;
 		}

@@ -108,8 +108,8 @@ static std::size_t folder_file_count(const char* path)
 /*
 *	writes a set amount of bytes in a ofstream as a const char*
 *	@param src  - location to copy data from to file
-*   @param dst  - file's output stream
-*   @param size - size of the data in bytes (optional, set to sizeof(T) if not specified)
+*	@param dst  - file's output stream
+*	@param size - size of the data in bytes (optional, set to sizeof(T) if not specified)
 */
 template<typename T>
 static void bin_write(T* src, std::fstream& dst, size_t size = sizeof(T))
@@ -134,9 +134,9 @@ static void bin_write(T* src, std::fstream& dst, uint32_t offset = 0, size_t siz
 /*
 *	writes a set amount of bytes in a ofstream as a const char*
 *	@param src    - location to copy data from to file
-*   @param dst    - file's output stream
-*   @param offset - pointer to offset of the data in file, in bytes (adds size param to offset after write)
-*   @param size   - size of the data in bytes (optional, set to sizeof(T) if not specified)
+*	@param dst    - file's output stream
+*	@param offset - pointer to offset of the data in file, in bytes (adds size param to offset after write)
+*	@param size   - size of the data in bytes (optional, set to sizeof(T) if not specified)
 */
 template<typename T>
 static void bin_write(T* src, std::fstream& dst, uint32_t* offset, size_t size = sizeof(T))
@@ -150,8 +150,8 @@ static void bin_write(T* src, std::fstream& dst, uint32_t* offset, size_t size =
 /*
 *	read a set amount of bytes in a ifstream as a char*
 *	@param dst    - location to copy file data to
-*   @param src    - file's input stream
-*   @param offset - offset of the data in file, in bytes (optional, set to 0 if not specified)
+*	@param src    - file's input stream
+*	@param offset - offset of the data in file, in bytes (optional, set to 0 if not specified)
 *	@param size   - size of the data in bytes (optional, set to sizeof(T) if not specified)
 */
 template<typename T>
@@ -164,9 +164,9 @@ static void bin_read(T* dst, std::fstream& src, uint32_t offset = 0, size_t size
 /* 
 *	read a set amount of bytes in a ifstream as a char* 
 *	@param dst    - location to copy file data to
-*   @param src    - file's input stream
+*	@param src    - file's input stream
 *	@param offset - pointer to offset of the data in file, in bytes (adds size param to offset after read)
-*   @param size   - size of the data in bytes (optional, set to sizeof(T) if not specified)
+*	@param size   - size of the data in bytes (optional, set to sizeof(T) if not specified)
 */
 template<typename T>
 static void bin_read(T* dst, std::fstream& src, uint32_t* offset, size_t size = sizeof(T))
@@ -205,7 +205,7 @@ static void bin_move(std::fstream& src, uint32_t old_offset, uint32_t new_offset
 *	@param size   - size of the magic number in bytes
 *	@param offset - offset into file (optional, set as 0 by default)
 * 
-*   @return 1 if magic matches, 0 otherwise
+*	@return 1 if magic matches, 0 otherwise
 */
 static bool verify_magic(const char* header, std::fstream& src, uint8_t size, uint32_t offset = 0)
 {
@@ -239,7 +239,7 @@ static std::u16string utf16be(const char* input, uint16_t size)
 	wide_char_t _test;
 
 	for (int i = 0; i < result.size(); i++)
-	{	
+	{
 		_test.lower = input[i * 2 + 1];
 		_test.upper = input[i * 2];
 		result[i] = _test.wide;

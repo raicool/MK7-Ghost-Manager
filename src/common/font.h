@@ -1,10 +1,11 @@
 #pragma once
 
-static ImWchar extended_symbols[]
+static ImWchar extended_symbols[] =
 {
 	0x03c2, // from 3ds shared font
 	0x266a, // from 3ds shared font
 	0x0123, // from 3ds shared font
+	0x0154, // from 3ds shared font
 	0x25c6,
 	0x2605,
 	0x044f,
@@ -18,5 +19,5 @@ static ImWchar extended_symbols[]
 	0x2640,
 	0x0442,
 	0x044c,
-	0x0127,
+
 };

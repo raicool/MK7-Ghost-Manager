@@ -16,7 +16,7 @@ void window::init(app* application, const char* window_title, uint16_t win_width
 
 	if (!main_window)
 	{
-//		LOG_ERROR("SDL Window could not be created {}", SDL_GetError());
+		LOG_ERROR("SDL Window could not be created {}", SDL_GetError());
 	}
 
 	panels = new panel();

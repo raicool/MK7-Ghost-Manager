@@ -13,6 +13,7 @@ enum panels
 	PANEL_DEFAULT = PANEL_MENU_BAR | PANEL_CUPS_LIST | PANEL_GHOST_LIST,
 };
 
+struct spotpass;
 struct panel
 {
 	panel(window* main_window)
@@ -23,7 +24,7 @@ struct panel
 	window* window_ptr = nullptr;         //
 	app* app_ptr = nullptr;               //
 	uint32_t panel_flags = PANEL_DEFAULT; //
-	int32_t cup = 1;                      //< which cup to display ghosts for in PANEL_GHOST_LIST
+	spotpass* cup_ptr = nullptr;          //< which cup to display ghosts for in PANEL_GHOST_LIST
 	int32_t course = 0;                   //< which course to display ghosts for in PANEL_GHOST_LIST
 	bool show_all_course = false;         //< toggle whether to show all courses within a cup or just 1
 	bool is_cup_selected = false;

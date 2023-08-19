@@ -68,6 +68,7 @@ void texture::load_ghost_textures()
 	LOG_INFO("glider textures loaded");
 	// symbols
 	symbol[0] = texture::add_texture("res/tex/Symbol/first_person.png", "first_person_badge");
+	symbol[1] = texture::add_texture("res/tex/Symbol/flag_atlas.png", "flag_atlas");
 	LOG_INFO("extra textures loaded");
 }
 

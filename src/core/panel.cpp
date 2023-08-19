@@ -57,7 +57,7 @@ void panel::render()
 				if (ImGui::BeginTabItem(cup_name[i]))
 				{
 					is_cup_selected = true;
-					cup = app_ptr->spotpass_files[i]->cup_id;
+					cup_ptr = app_ptr->spotpass_files[i];
 					course = cup_courses[i][idx];
 
 					items[0] = (char*)course_name[cup_courses[i][0]];
@@ -74,14 +74,14 @@ void panel::render()
 
 		if (is_cup_selected)
 		{
-			if (ImGui::ListBox("Courses", &idx, items, 4, 4)) course = cup_courses[cup - 1][idx];
-			ImGui::Text("Current file: %s", app_ptr->spotpass_files[cup - 1]->file_directory.c_str());
+			if (ImGui::ListBox("Courses", &idx, items, 4, 4)) course = cup_courses[cup_ptr->cup_id][idx];
+			ImGui::Text("Current file: %s", cup_ptr->file_directory.c_str());
 
 			ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
 
 			if (ImGui::Button("Add Ghost"))
 			{
-				if (app_ptr->spotpass_files[cup - 1]->add_ghost(open_file()) == false)
+				if (cup_ptr->add_ghost(open_file()) == false)
 				{
 					ImGui::PushID("Load Failed");
 					ImGui::OpenPopup("Load Failed");
@@ -117,24 +117,22 @@ void panel::render()
 		/*
 		*	Cup ghosts will be rendered here
 		*/
-		if (app_ptr->spotpass_files[cup - 1])
+		if (cup_ptr)
 		{
-			spotpass& current_cup = *app_ptr->spotpass_files[cup - 1];
-
 			ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH);
 
-			for (uint32_t i = 0; i < current_cup.ghost_count; i++)
+			for (uint32_t i = 0; i < cup_ptr->ghost_count; i++)
 			{
-				if (current_cup.ghosts[i]->course_id == course || show_all_course)
+				if (cup_ptr->ghosts[i]->course_id == course || show_all_course)
 				{
 					ImGui::PushID(i);
 					ImGui::TableNextRow();
 					ImGui::TableSetColumnIndex(0);
 
-					draw_ghost_details(current_cup.ghosts[i]);
+					draw_ghost_details(cup_ptr->ghosts[i]);
 
-					if (ImGui::Button("Delete Ghost"))    current_cup.delete_ghost(current_cup.ghosts[i]);
-					if (ImGui::Button("Overwrite Ghost")) current_cup.overwrite_ghost(current_cup.ghosts[i]->file_offset, open_file());
+					if (ImGui::Button("Delete Ghost"))    cup_ptr->delete_ghost(cup_ptr->ghosts[i]);
+					if (ImGui::Button("Overwrite Ghost")) cup_ptr->overwrite_ghost(cup_ptr->ghosts[i]->file_offset, open_file());
 
 					ImGui::PopID();
 				}
@@ -148,17 +146,28 @@ void panel::render()
 
 void panel::draw_ghost_details(ghost* _ghost)
 {
+	/*
+	*	ghost character, player name, and flag
+	*/
 	ImGui::Image(app_ptr->texture_manager.driver[_ghost->character_id], { 64, 64 });
 	ImGui::SameLine();
 	ImGui::Text("%s", utf8_conv.to_bytes(_ghost->player_name).c_str());
+	ImGui::SameLine();
+	//ImGui::Image(app_ptr->texture_manager.symbol[0x01], { 26, 18 }, {0, (18.0f * _ghost->country_id) / 1170.0f}, { 1, ((18.0f * _ghost->country_id) + 18) / 1170.0f});
 
+	/*
+	*	display ghost kart config
+	*/
 	ImGui::SameLine(ImGui::GetWindowWidth() / 4); ImGui::Image(app_ptr->texture_manager.body[_ghost->kart_id], { 128, 64 });
 	ImGui::SameLine(); ImGui::Image(app_ptr->texture_manager.tire[_ghost->tire_id], { 128, 64 });
 	ImGui::SameLine(); ImGui::Image(app_ptr->texture_manager.wing[_ghost->glider_id], { 128, 64 });
 
+	/*
+	*	first person indicator
+	*/
 	if (_ghost->fp_flag)
 	{
-		ImGui::SameLine(ImGui::GetWindowWidth() - 64);
+		ImGui::SameLine(ImGui::GetWindowWidth() - 40);
 		ImGui::Image(app_ptr->texture_manager.symbol[0x00], { 32, 32 });
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
 		{
@@ -176,6 +185,7 @@ void panel::draw_ghost_details(ghost* _ghost)
 		ImGui::TreePop();
 	}
 
+	// todo
 	if (ImGui::TreeNode("Mii Details"))
 	{
 		//ImGui::Text("System ID = %lu", _ghost->mii_data.sys_id);
@@ -184,6 +194,5 @@ void panel::draw_ghost_details(ghost* _ghost)
 	}
 
 	ImGui::Text("Course: %s", course_name[_ghost->course_id]);
-
 	ImGui::TextColored(ImVec4{ 1.0f, 0.9f, 0.1f, 1.0f }, "Time: %i:%02i.%03i", _ghost->finished_min, _ghost->finished_sec, _ghost->finished_ms);
 }

@@ -6,7 +6,7 @@ struct texture
 	void* body[0x11];
 	void* tire[0x0a];
 	void* wing[0x07];
-	void* symbol[0x01];
+	void* symbol[0x02];
 
 	std::unordered_map<std::string_view, SDL_Texture*> textures;
 	SDL_Renderer* current_renderer;
