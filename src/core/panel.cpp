@@ -9,11 +9,6 @@
 #include "common/utils.h"
 #include "gfx/texture.h"
 
-#define COL_GRAY  ImVec4{ 0.5, 0.5, 0.5, 1 }
-#define COL_GREEN ImVec4{ 0.5,   1, 0.5, 1 }
-#define COL_RED   ImVec4{   1, 0.5, 0.5, 1 }
-#define COL_WHITE ImVec4{   1,   1,   1, 1 }
-
 std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf8_conv;
 
 void panel::render()
@@ -80,6 +75,7 @@ void panel::render()
 		if (is_cup_selected)
 		{
 			if (ImGui::ListBox("Courses", &idx, items, 4, 4)) course = cup_courses[cup - 1][idx];
+			ImGui::Text("Current file: %s", app_ptr->spotpass_files[cup - 1]->file_directory.c_str());
 
 			ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
 
