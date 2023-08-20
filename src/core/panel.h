@@ -28,6 +28,7 @@ struct panel
 	int32_t course = 0;                   //< which course to display ghosts for in PANEL_GHOST_LIST
 	bool show_all_course = false;         //< toggle whether to show all courses within a cup or just 1
 	bool is_cup_selected = false;
+	bool display_flags = true;
 	
 	void draw_ghost_details(ghost* _ghost);
 

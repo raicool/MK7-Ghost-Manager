@@ -72,7 +72,6 @@ uint8_t spotpass::load(const char* dir)
 			offset += 4;
 			bin_read<mii>(&ghosts[ghost_count]->mii_data, spotpass_data, &offset);
 			bin_read<uint8_t>(&ghosts[ghost_count]->country_id, spotpass_data, &offset);
-			LOG_DEBUG("country = {}", ghosts[ghost_count]->country_id);
 			ghost_count++;
 		}
 	}

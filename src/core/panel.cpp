@@ -94,6 +94,7 @@ void panel::render()
 
 		ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
 		ImGui::Checkbox("Display all courses within cup", &show_all_course);
+		ImGui::Checkbox("Display flags", &display_flags);
 
 		ImGui::PushID("Load Failed");
 		if (ImGui::BeginPopupModal("Load Failed", NULL, ImGuiWindowFlags_AlwaysAutoResize))
@@ -151,10 +152,19 @@ void panel::draw_ghost_details(ghost* _ghost)
 	*/
 	ImGui::Image(app_ptr->texture_manager.driver[_ghost->character_id], { 64, 64 });
 	ImGui::SameLine();
-	ImGui::Text("%s", utf8_conv.to_bytes(_ghost->player_name).c_str());
-	ImGui::SameLine();
-	//ImGui::Image(app_ptr->texture_manager.symbol[0x01], { 26, 18 }, {0, (18.0f * _ghost->country_id) / 1170.0f}, { 1, ((18.0f * _ghost->country_id) + 18) / 1170.0f});
+	
+	if (display_flags)
+	{
+		// 26
+		// 18
+		float flag_xoffset = (26 * (_ghost->country_id % 16)) / 416.0f;
+		float flag_yoffset = (18 * (round_multiple(_ghost->country_id, 17) / 17)) / 216.0f;
+		ImGui::Image(app_ptr->texture_manager.symbol[0x01], { 26, 18 }, { flag_xoffset, flag_yoffset }, { flag_xoffset + (26 / 416.0f), flag_yoffset + (18 / 216.0f) });
+	}
 
+	ImGui::SameLine();
+	ImGui::Text("%s", utf8_conv.to_bytes(_ghost->player_name).c_str());
+	
 	/*
 	*	display ghost kart config
 	*/
