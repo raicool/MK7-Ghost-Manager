@@ -113,7 +113,7 @@ void panel::render()
 	{
 		ImGui::SetNextWindowSize({ w - (w / 3.0f), h - 20.0f });
 		ImGui::SetNextWindowPos({ 1 + (w / 3.0f), 20 });
-		ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration);
+		ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
 		/*
 		*	Cup ghosts will be rendered here
@@ -209,4 +209,5 @@ void panel::draw_ghost_details(ghost* _ghost)
 
 	ImGui::Text("Course: %s", course_name[_ghost->course_id]);
 	ImGui::TextColored(ImVec4{ 1.0f, 0.9f, 0.1f, 1.0f }, "Time: %i:%02i.%03i", _ghost->finished_min, _ghost->finished_sec, _ghost->finished_ms);
+	ImGui::NewLine();
 }
