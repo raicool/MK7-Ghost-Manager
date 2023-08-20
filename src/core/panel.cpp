@@ -168,7 +168,7 @@ void panel::draw_ghost_details(ghost* _ghost)
 	/*
 	*	display ghost kart config
 	*/
-	ImGui::SameLine(ImGui::GetWindowWidth() / 4); ImGui::Image(app_ptr->texture_manager.body[_ghost->kart_id], { 128, 64 });
+	ImGui::SameLine(ImGui::GetWindowWidth() / 3); ImGui::Image(app_ptr->texture_manager.body[_ghost->kart_id], { 128, 64 });
 	ImGui::SameLine(); ImGui::Image(app_ptr->texture_manager.tire[_ghost->tire_id], { 128, 64 });
 	ImGui::SameLine(); ImGui::Image(app_ptr->texture_manager.wing[_ghost->glider_id], { 128, 64 });
 
@@ -189,6 +189,8 @@ void panel::draw_ghost_details(ghost* _ghost)
 		}
 	}
 
+	ImGui::NewLine();
+
 	if (ImGui::TreeNode("Name Details"))
 	{
 		ImGui::DebugTextEncoding(utf8_conv.to_bytes(_ghost->player_name).c_str());
@@ -202,6 +204,8 @@ void panel::draw_ghost_details(ghost* _ghost)
 		//ImGui::Text("Region = %i", _ghost->mii_data.region);
 		ImGui::TreePop();
 	}
+
+	ImGui::NewLine();
 
 	ImGui::Text("Course: %s", course_name[_ghost->course_id]);
 	ImGui::TextColored(ImVec4{ 1.0f, 0.9f, 0.1f, 1.0f }, "Time: %i:%02i.%03i", _ghost->finished_min, _ghost->finished_sec, _ghost->finished_ms);
