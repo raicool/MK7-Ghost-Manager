@@ -25,3 +25,11 @@ sudo apt-get install libsdl2-image-2.0-0
 
 ## Windows
 the ghost manager requires Visual C++ 2015 and 2019 redistributables to be installed
+##### x64
+```
+https://aka.ms/vs/17/release/vc_redist.x64.exe
+```
+##### x86
+```
+https://aka.ms/vs/17/release/vc_redist.x86.exe
+```
