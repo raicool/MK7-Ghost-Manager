@@ -32,6 +32,7 @@ endif()
 
 add_executable(${PROJECT_NAME} ${OSDIALOG_SOURCE} ${CXX_SOURCE} ${IMGUI_SOURCE})
 target_precompile_headers(${PROJECT_NAME} PRIVATE "src/pch.h")
+target_sources(${PROJECT_NAME} PRIVATE "resource.rc")
 
 # packages
 # sdl2
