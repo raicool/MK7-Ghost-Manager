@@ -18,5 +18,6 @@ struct spotpass
 
 	void overwrite_ghost(uint32_t offset, const char* ghost_directory);
 	void delete_ghost(ghost* _ghost);
+	void extract_ghost(ghost* _ghost);
 	bool add_ghost(const char* ghost_directory);
 };

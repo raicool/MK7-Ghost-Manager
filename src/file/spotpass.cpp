@@ -59,8 +59,8 @@ uint8_t spotpass::load(const char* dir)
 			offset += 12;
 			bin_read<uint32_t>(&u32buffer, spotpass_data, offset);
 			ghosts[ghost_count]->course_id    = (u32buffer >> 0)  & 0x3f; // 6 bit
-			ghosts[ghost_count]->character_id = (u32buffer >> 6)  & 0x0f; // 5 bit
-			ghosts[ghost_count]->kart_id      = (u32buffer >> 11) & 0x0f; // 5 bit
+			ghosts[ghost_count]->character_id = (u32buffer >> 6)  & 0x1f; // 5 bit
+			ghosts[ghost_count]->kart_id      = (u32buffer >> 11) & 0x1f; // 5 bit
 			ghosts[ghost_count]->tire_id      = (u32buffer >> 16) & 0x0f; // 4 bit
 			ghosts[ghost_count]->glider_id    = (u32buffer >> 20) & 0x0f; // 4 bit
 
@@ -107,12 +107,12 @@ void spotpass::overwrite_ghost(uint32_t offset, const char* ghost_dir)
 */
 void spotpass::delete_ghost(ghost* _ghost)
 {
-	uint16_t next_course_ghost_id = round_multiple(_ghost->ghost_id, 20) + 20;
-	uint32_t offset               = _ghost->file_offset;
+	uint16_t next_course = round_multiple(_ghost->ghost_id, 20) + 20;
+	uint32_t offset = _ghost->file_offset;
 	
-	for (uint32_t i = _ghost->ghost_id; i < next_course_ghost_id; i++)
+	for (uint32_t i = _ghost->ghost_id; i < next_course; i++)
 	{
-		if (offset + GHOST_SIZE >= ((next_course_ghost_id * GHOST_SIZE) + 0x64)) break;
+		if (offset + GHOST_SIZE >= ((next_course * GHOST_SIZE) + 0x64)) break;
 
 		bin_move(spotpass_data, offset + GHOST_SIZE, offset, GHOST_SIZE, true);
 		offset += GHOST_SIZE;
@@ -120,6 +120,42 @@ void spotpass::delete_ghost(ghost* _ghost)
 
 	// reload ghost since its overwritten
 	reload();
+}
+
+/*
+*	extract a ghost from a spotpass file
+*	also adds crc-32 checksum to end of file
+*/
+void spotpass::extract_ghost(ghost* _ghost)
+{
+	char* file_name = new char[13];
+	char* ghost_buffer = new char[GHOST_SIZE];
+	unsigned int crc32;
+	const char* replay_dir;
+	uint32_t offset = 0;
+
+	snprintf(file_name, 13, "replay%i.dat", _ghost->course_id);
+	replay_dir = create_file(file_name);
+
+	std::fstream replay(replay_dir, std::ios::out | std::ios::binary | std::ios::trunc);
+
+	if (!replay.is_open())
+	{
+		LOG_ERROR("ghost extract error : could not access file {}", replay_dir);
+		return;
+	}
+	
+	bin_read(ghost_buffer, spotpass_data, _ghost->file_offset, GHOST_SIZE);
+
+	crc32 = crc32b((unsigned char*)ghost_buffer, GHOST_SIZE);
+
+	bin_write(ghost_buffer, replay, &offset, GHOST_SIZE);
+	bin_write(&crc32, replay, offset);
+
+	replay.close();
+
+	delete[] file_name;
+	delete[] ghost_buffer;
 }
 
 /*

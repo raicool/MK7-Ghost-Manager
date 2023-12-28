@@ -38,6 +38,11 @@ int app::update()
 	}
 }
 
+void app::connect_3ds()
+{
+//	gdb_iosocket.connect();
+}
+
 void app::open_spotpass_file()
 {
 	const char* file_dir = open_file();

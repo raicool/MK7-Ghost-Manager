@@ -22,8 +22,9 @@ void panel::render()
 		if (ImGui::BeginMainMenuBar());
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("Open SpotPass save folder")) app_ptr->open_spotpass_folder();
-			if (ImGui::MenuItem("Open SpotPass save file"))   app_ptr->open_spotpass_file();
+			if (ImGui::MenuItem("Open SpotPass Save Folder")) app_ptr->open_spotpass_folder();
+			if (ImGui::MenuItem("Open SpotPass Save File"))   app_ptr->open_spotpass_file();
+//			if (ImGui::MenuItem("Connect to 3DS debugger"))   app_ptr->connect_3ds();
 
 			ImGui::EndMenu();
 		}
@@ -93,8 +94,8 @@ void panel::render()
 		}
 
 		ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
-		ImGui::Checkbox("Display all courses within cup", &show_all_course);
-		ImGui::Checkbox("Display flags", &display_flags);
+		ImGui::Checkbox("Display All Courses In Cup", &show_all_course);
+		ImGui::Checkbox("Display Flags", &display_flags);
 
 		ImGui::PushID("Load Failed");
 		if (ImGui::BeginPopupModal("Load Failed", NULL, ImGuiWindowFlags_AlwaysAutoResize))
@@ -134,6 +135,7 @@ void panel::render()
 
 					if (ImGui::Button("Delete Ghost"))    cup_ptr->delete_ghost(cup_ptr->ghosts[i]);
 					if (ImGui::Button("Overwrite Ghost")) cup_ptr->overwrite_ghost(cup_ptr->ghosts[i]->file_offset, open_file());
+					if (ImGui::Button("Extract Ghost"))   cup_ptr->extract_ghost(cup_ptr->ghosts[i]);
 
 					ImGui::PopID();
 				}
@@ -177,7 +179,7 @@ void panel::draw_ghost_details(ghost* _ghost)
 	*/
 	if (_ghost->fp_flag)
 	{
-		ImGui::SameLine(ImGui::GetWindowWidth() - 40);
+		ImGui::SameLine(ImGui::GetWindowWidth() - 64);
 		ImGui::Image(app_ptr->texture_manager.symbol[0x00], { 32, 32 });
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
 		{
@@ -198,12 +200,14 @@ void panel::draw_ghost_details(ghost* _ghost)
 	}
 
 	// todo
+	/*
 	if (ImGui::TreeNode("Mii Details"))
 	{
 		//ImGui::Text("System ID = %lu", _ghost->mii_data.sys_id);
 		//ImGui::Text("Region = %i", _ghost->mii_data.region);
 		ImGui::TreePop();
 	}
+	*/
 
 	ImGui::NewLine();
 

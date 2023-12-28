@@ -82,16 +82,17 @@ static const char* open_folder()
 /*
 *	creates an empty file from a save file prompt and returns the absolute path
 */
-static const char* create_file()
+static const char* create_file(const char* name = nullptr)
 {
+	if (name) strcpy(dir_buf, name);
 #ifdef WIN32
 	OPENFILENAMEA f{ 0 };
-	f.lStructSize  = sizeof(f);
-	f.lpstrFile    = dir_buf;         //< file name
-	f.nMaxFile     = sizeof(dir_buf); //< max directory length
-	f.lpstrFilter  = "All\0*.*\0Binary (*.bin)\0*.bin\0";
-	f.nFilterIndex = 1;
-	f.Flags = OFN_PATHMUSTEXIST;
+	f.lStructSize    = sizeof(f);
+	f.lpstrFile      = dir_buf;         //< file name
+	f.nMaxFile       = sizeof(dir_buf); //< max directory length
+	f.lpstrFilter    = "All\0*.*\0Replay (*.dat)\0*.dat\0";
+	f.nFilterIndex   = 1;
+	f.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
 	GetSaveFileNameA(&f) ? LOG_INFO("file \"{}\" created", dir_buf) : void();
 	return dir_buf;
 #endif
@@ -248,6 +249,26 @@ static std::u16string utf16be(const char* input, uint16_t size)
 	return result;
 }
 
+/*
+*	https://web.archive.org/web/20190108202303/http://www.hackersdelight.org/hdcodetxt/crc.c.txt
+*/
+static unsigned int crc32b(unsigned char* message, unsigned short size) {
+	int i, j;
+	unsigned int byte, crc, mask;
+
+	i = 0;
+	crc = 0xffffffff;
+	while (i < size) {
+		byte = message[i];            // Get next byte.
+		crc = crc ^ byte;
+		for (j = 7; j >= 0; j--) {    // Do eight times.
+			mask = -(crc & 1);
+			crc = (crc >> 1) ^ (0xedb88320 & mask);
+		}
+		i = i + 1;
+	}
+	return ~crc;
+}
 
 inline uint16_t swap_byte(uint8_t lower, uint8_t upper)
 {

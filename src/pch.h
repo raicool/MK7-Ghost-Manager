@@ -20,6 +20,9 @@
 #include <osdialog.h>
 #endif
 
+// curl
+//#include <curl/curl.h>
+
 // SDL
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
