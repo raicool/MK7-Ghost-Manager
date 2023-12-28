@@ -7,7 +7,7 @@
 
 void app::init()
 {
-	main_window.init(this, "MK7 Spotpass Ghost Manager v0.2.3", 848, 480, 0, SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE);
+	main_window.init(this, "MK7 Spotpass Ghost Manager v0.2.4", 848, 480, 0, SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE);
 
 	logger::init_logger();
 
@@ -36,11 +36,6 @@ int app::update()
 
 		main_window.deltatime.apply_delay((int32_t)((1.0f / main_window.framerate) * 1000.0f));
 	}
-}
-
-void app::connect_3ds()
-{
-//	gdb_iosocket.connect();
 }
 
 void app::open_spotpass_file()

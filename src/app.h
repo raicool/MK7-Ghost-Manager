@@ -3,7 +3,6 @@
 #include "core/window.h"
 #include "file/spotpass.h"
 #include "gfx/texture.h"
-#include "network/gdb.h"
 
 struct app
 {
@@ -16,7 +15,7 @@ struct app
 	void open_spotpass_file();
 	void open_spotpass_folder();
 	void check_updates();
-	void connect_3ds();
+//	void connect_3ds();
 
 	void init();
 	int update();
