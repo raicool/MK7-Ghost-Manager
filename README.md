@@ -9,11 +9,10 @@ This tool allows you to customize mario kart 7's spotpass ghosts with your own!
 
 credits to B_squo for replay documentation https://twitter.com/B_squo
 ## TODO
-- [ ] add .rc file for windows builds
+- [ ] add support for viewing and editing streetpass data (data.dat)
 - [ ] get spotpass files directly from 3ds using luma debugger / an ftp server
 - [ ] auto update feature
 - [ ] ghost sorting
-
 
 ## Usage
 ## Ubuntu
