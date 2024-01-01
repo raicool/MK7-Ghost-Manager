@@ -134,7 +134,7 @@ void spotpass::extract_ghost(ghost* _ghost)
 	const char* replay_dir;
 	uint32_t offset = 0;
 
-	snprintf(file_name, 13, "replay%i.dat", _ghost->course_id);
+	snprintf(file_name, 13, "replay%02i.dat", _ghost->course_id);
 	replay_dir = create_file(file_name);
 
 	std::fstream replay(replay_dir, std::ios::out | std::ios::binary | std::ios::trunc);
@@ -146,7 +146,6 @@ void spotpass::extract_ghost(ghost* _ghost)
 	}
 	
 	bin_read(ghost_buffer, spotpass_data, _ghost->file_offset, GHOST_SIZE);
-
 	crc32 = crc32b((unsigned char*)ghost_buffer, GHOST_SIZE);
 
 	bin_write(ghost_buffer, replay, &offset, GHOST_SIZE);
