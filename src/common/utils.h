@@ -13,7 +13,7 @@ static char dir_buf[256]{ 0 };
 *	returns an fstream from an open file dialog
 *	@param mode - ios open mode flags (ex: std::ios::binary | std::ios::in)
 */
-static std::fstream open_file_s(uint32_t mode)
+static std::fstream open_file_s(std::ios_base::openmode mode)
 {
 	std::fstream file;
 #ifdef WIN32
