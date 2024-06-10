@@ -5,7 +5,7 @@ project("ghost-manager" LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
+#list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
 # add c++ files
 file(GLOB_RECURSE CXX_SOURCE "src/*.cpp")
@@ -36,12 +36,12 @@ target_sources(${PROJECT_NAME} PRIVATE "resource.rc")
 
 # packages
 # sdl2
-find_package(SDL2_LIBRARY NAMES SDL2)
-target_link_libraries(${PROJECT_NAME} SDL2::Main)
+find_package(SDL2 REQUIRED)
+target_link_libraries(${PROJECT_NAME} SDL2::SDL2 SDL2::SDL2main)
 
 # sdl2_image
 find_package(SDL2_image REQUIRED)
-target_link_libraries(${PROJECT_NAME} SDL2::Image)
+target_link_libraries(${PROJECT_NAME} SDL2_image::SDL2_image)
 
 # unix packages
 if (UNIX)

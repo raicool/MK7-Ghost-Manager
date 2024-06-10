@@ -4,10 +4,11 @@
 #include "core/window.h"
 #include "gfx/texture.h"
 #include "app.h"
+#include "version.h"
 
 void app::init()
 {
-	main_window.init(this, "MK7 Spotpass Ghost Manager v0.2.4", 848, 480, 0, SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE);
+	main_window.init(this, "MK7 Spotpass Ghost Manager v0.2.5", 848, 480, 0, SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE);
 
 	logger::init_logger();
 

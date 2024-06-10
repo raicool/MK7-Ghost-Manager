@@ -7,9 +7,8 @@
 
 #define BITMASK(x) (1U<<(x))
 
-static char dir_buf[256]{ 0 };
-
 // file management
+static char dir_buf[256]{ 0 };
 /*
 *	returns an fstream from an open file dialog
 *	@param mode - ios open mode flags (ex: std::ios::binary | std::ios::in)
@@ -28,6 +27,9 @@ static std::fstream open_file_s(uint32_t mode)
 	GetOpenFileNameA(&f) ? LOG_INFO("file \"{}\" found", dir_buf) : void();
 	file.open(dir_buf, mode);
 #endif
+#ifdef __LINUX__
+	file.open(osdialog_file(OSDIALOG_OPEN, NULL, NULL, NULL), mode);
+#endif
 	return file;
 }
 
@@ -41,7 +43,7 @@ static const char* open_file()
 	f.lStructSize  = sizeof(f);
 	f.lpstrFile    = dir_buf;         //< file name
 	f.nMaxFile     = sizeof(dir_buf); //< max directory length
-	f.lpstrFilter  = "All\0*.*\0Binary (*.bin)\0*.bin\0";
+	f.lpstrFilter  = "All\0*.*\0Replay (*.dat)\0*.dat\0";
 	f.nFilterIndex = 1;
 	f.Flags        = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 	GetOpenFileNameA(&f) ? LOG_INFO("file \"{}\" found", dir_buf) : void();
@@ -84,7 +86,7 @@ static const char* open_folder()
 */
 static const char* create_file(const char* name = nullptr)
 {
-	if (name) strcpy(dir_buf, name);
+	if (name) strcpy_s(dir_buf, name);
 #ifdef WIN32
 	OPENFILENAMEA f{ 0 };
 	f.lStructSize    = sizeof(f);

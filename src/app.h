@@ -14,7 +14,6 @@ struct app
 
 	void open_spotpass_file();
 	void open_spotpass_folder();
-	void check_updates();
 //	void connect_3ds();
 
 	void init();
