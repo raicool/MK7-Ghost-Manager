@@ -40,7 +40,7 @@ find_package(SDL2 REQUIRED)
 target_link_libraries(${PROJECT_NAME} SDL2::SDL2 SDL2::SDL2main)
 
 # sdl2_image
-find_package(SDL2_Image REQUIRED)
+find_package(SDL2_image REQUIRED)
 target_link_libraries(${PROJECT_NAME} ${SDL2_IMAGE_LIBRARY})
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_IMAGE_INCLUDE_DIR})
 
