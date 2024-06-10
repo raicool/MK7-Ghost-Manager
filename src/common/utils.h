@@ -86,7 +86,7 @@ static const char* open_folder()
 */
 static const char* create_file(const char* name = nullptr)
 {
-	if (name) strcpy_s(dir_buf, name);
+	if (name) strcpy(dir_buf, name);
 #ifdef WIN32
 	OPENFILENAMEA f{ 0 };
 	f.lStructSize    = sizeof(f);
