@@ -58,7 +58,7 @@ uint8_t spotpass::load(const char* dir)
 			
 			offset += 12;
 			bin_read<uint32_t>(&u32buffer, spotpass_data, offset);
-			ghosts[ghost_count]->course_id    = (u32buffer >> 0)  & 0x3f; // 6 bit
+			ghosts[ghost_count]->course_id    = (u32buffer >> 0)  & 0x7f; // 7 bit
 			ghosts[ghost_count]->character_id = (u32buffer >> 6)  & 0x1f; // 5 bit
 			ghosts[ghost_count]->kart_id      = (u32buffer >> 11) & 0x1f; // 5 bit
 			ghosts[ghost_count]->tire_id      = (u32buffer >> 16) & 0x0f; // 4 bit
@@ -82,19 +82,18 @@ uint8_t spotpass::load(const char* dir)
 // replaces ghost data at a given offset with new data from replay file
 void spotpass::overwrite_ghost(uint32_t offset, const char* ghost_dir)
 {
-	std::fstream ghost_data;
-	ghost_data.open(ghost_dir, std::ios::in | std::ios::binary);
+	std::fstream ghost_file;
+	ghost_file.open(ghost_dir, std::ios::in | std::ios::binary);
 
-	if (!ghost_data.is_open()) return;
+	if (!ghost_file.is_open()) return;
+	char* ghost_data = new char(GHOST_SIZE);
 
-	for (int i = 0; i < GHOST_SIZE; i++)
-	{
-		char byte;
-		bin_read<char>(&byte, ghost_data, i);
-		bin_write<char>(&byte, spotpass_data, offset + i);
-	}
+	bin_read(ghost_data, ghost_file, 0u, GHOST_SIZE);
+	bin_write(&ghost_data, spotpass_data, offset, GHOST_SIZE);
 
-	ghost_data.close();
+	ghost_file.close();
+
+	delete ghost_data;
 
 	// reload ghost since its overwritten
 	reload();
@@ -173,14 +172,14 @@ bool spotpass::add_ghost(const char* ghost_dir)
 	bin_read<uint32_t>(&course_id, ghost_data, 20);
 	course_id &= 0x3f;
 
-	if (course_id > 31) return false;
+	if (course_id > 0x79) return false;
 
-	uint32_t next_course_ghost_offset =  ((cup_course_index[course_id] * 20)       * GHOST_SIZE) + 0x64;
-	uint32_t offset                   = (((cup_course_index[course_id] * 20) - 20) * GHOST_SIZE) + 0x64;
+	uint32_t next_course_offset =  cup_course_index[course_id] * 20       * GHOST_SIZE + 0x64;
+	uint32_t offset             = (cup_course_index[course_id] * 20 - 20) * GHOST_SIZE + 0x64;
 
 	for (uint32_t i = cup_course_index[course_id] * 15;; i++)
 	{
-		if (offset >= next_course_ghost_offset)
+		if (offset >= next_course_offset)
 		{
 			LOG_ERROR("ghost add error : there is no more room for a new ghost in this course, please delete ghosts to make space!");
 			ghost_data.close();

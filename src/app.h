@@ -10,11 +10,12 @@ struct app
 	texture texture_manager;
 //	socket gdb_iosocket;
 
-	spotpass* spotpass_files[8]{ nullptr }; // 8 file managers for 8 different spotpass cups
+	spotpass* spotpass_files[32]{ nullptr };
 
 	void open_spotpass_file();
 	void open_spotpass_folder();
 //	void connect_3ds();
+	void create_spotpass_folder();
 
 	void init();
 	int update();
