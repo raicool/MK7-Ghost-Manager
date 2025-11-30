@@ -10,7 +10,7 @@ void window::init(app* application, const char* window_title, uint16_t win_width
 	height = win_height;
 	framerate = win_framerate;
 
-	if (!SDL_CreateWindowAndRenderer(window_title, win_width, win_height, 0, &main_window, &sdlrenderer))
+	if (!SDL_CreateWindowAndRenderer(window_title, win_width, win_height, flags, &main_window, &sdlrenderer))
 	{
 		LOG_ERROR("SDL Window/Renderer could not be created \n\tSDL_GetError(): {}", SDL_GetError());
 	}

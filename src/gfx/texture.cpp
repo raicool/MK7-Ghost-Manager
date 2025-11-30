@@ -25,7 +25,7 @@ void texture::load_ghost_textures()
 	driver[CHAR_WARIO]        = texture::add_texture("res/tex/Driver/wr.png", "wario");
 	driver[CHAR_WIGGLER]      = texture::add_texture("res/tex/Driver/wig.png", "wiggler");
 	driver[CHAR_YOSHI]        = texture::add_texture("res/tex/Driver/ys.png", "yoshi");
-	LOG_INFO("character textures loaded");
+	LOG_TRACE("character textures loaded");
 	// karts
 	body[KART_STANDARD]      = texture::add_texture("res/tex/Kart/Body/body_std.png", "standard");
 	body[KART_BOLT_BUGGY]    = texture::add_texture("res/tex/Kart/Body/body_rally.png", "bolt_buggy");
@@ -44,7 +44,7 @@ void texture::load_ghost_textures()
 	body[KART_BLUE_SEVEN]    = texture::add_texture("res/tex/Kart/Body/body_race.png", "blue_seven");
 	body[KART_SODA_JET]      = texture::add_texture("res/tex/Kart/Body/body_jet.png", "soda_jet");
 	body[KART_GOLD_STANDARD] = texture::add_texture("res/tex/Kart/Body/body_gold.png", "gold_standard");
-	LOG_INFO("kart textures loaded");
+	LOG_TRACE("kart textures loaded");
 	// tires
 	tire[TIRE_STANDARD]    = texture::add_texture("res/tex/Kart/Tire/tire_std.png", "standard");
 	tire[TIRE_MONSTER]     = texture::add_texture("res/tex/Kart/Tire/tire_big.png", "monster");
@@ -56,7 +56,7 @@ void texture::load_ghost_textures()
 	tire[TIRE_WOOD]        = texture::add_texture("res/tex/Kart/Tire/tire_wood.png", "wood");
 	tire[TIRE_RED_MONSTER] = texture::add_texture("res/tex/Kart/Tire/tire_bigRed.png", "red_monster");
 	tire[TIRE_MUSHROOM]    = texture::add_texture("res/tex/Kart/Tire/tire_mush.png", "mushroom");
-	LOG_INFO("tire textures loaded");
+	LOG_TRACE("tire textures loaded");
 	// gliders
 	wing[WING_SUPER_GLIDER]  = texture::add_texture("res/tex/Kart/Wing/wing_std.png", "super_glider");
 	wing[WING_PARAGLIDER]    = texture::add_texture("res/tex/Kart/Wing/wing_para.png", "paraglider");
@@ -65,11 +65,11 @@ void texture::load_ghost_textures()
 	wing[WING_SWOOPER]       = texture::add_texture("res/tex/Kart/Wing/wing_basa.png", "swooper");
 	wing[WING_BEAST_GLIDER]  = texture::add_texture("res/tex/Kart/Wing/wing_met.png", "beast_glider");
 	wing[WING_GOLD_GLIDER]   = texture::add_texture("res/tex/Kart/Wing/wing_gold.png", "gold_glider");
-	LOG_INFO("glider textures loaded");
+	LOG_TRACE("glider textures loaded");
 	// symbols
 	symbol[0] = texture::add_texture("res/tex/Symbol/first_person.png", "first_person_badge");
 	symbol[1] = texture::add_texture("res/tex/Symbol/flag_atlas.png", "flag_atlas");
-	LOG_INFO("extra textures loaded");
+	LOG_TRACE("extra textures loaded");
 }
 
 
@@ -87,7 +87,7 @@ void* texture::add_texture(const char* dir, std::string_view id)
 
 	textures[id] = SDL_CreateTextureFromSurface(current_renderer, surface);
 
-	//LOG_TRACE("texture {} created at address {}", dir, (void*)textures[id]);
+	LOG_DEBUG("texture {} loaded at address {}", dir, (void*)textures[id]);
 
 	SDL_DestroySurface(surface);
 

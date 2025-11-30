@@ -9,7 +9,7 @@
 void app::init()
 {
 	logger::init_logger();
-	main_window.init(this, std::format("MK7 Spotpass Ghost Manager v{}", VERSION).c_str() , 848, 480, 0, SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE | SDL_WINDOWPOS_CENTERED);
+	main_window.init(this, std::format("MK7 Spotpass Ghost Manager v{}", VERSION).c_str() , 848, 480, 0, SDL_WINDOW_RESIZABLE);
 
 	texture_manager.current_renderer = main_window.sdlrenderer;
 	texture_manager.load_ghost_textures();
