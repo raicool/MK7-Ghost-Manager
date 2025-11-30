@@ -75,7 +75,7 @@ void texture::load_ghost_textures()
 
 void* texture::add_texture(const char* dir, std::string_view id)
 {
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, 0);
+	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, 0);
 
 	SDL_Surface* surface = IMG_Load(dir);
 
@@ -89,7 +89,7 @@ void* texture::add_texture(const char* dir, std::string_view id)
 
 	//LOG_TRACE("texture {} created at address {}", dir, (void*)textures[id]);
 
-	SDL_FreeSurface(surface);
+	SDL_DestroySurface(surface);
 
 	texture_count++;
 	return textures[id];

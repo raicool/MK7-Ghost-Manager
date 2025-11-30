@@ -1,15 +1,15 @@
-[submodule "deps/imgui"]
-	path = dep/imgui
-	url = https://github.com/ocornut/imgui.git
-[submodule "deps/spdlog"]
-	path = dep/spdlog
-	url = https://github.com/gabime/spdlog.git
-[submodule "dep/osdialog"]
-	path = dep/osdialog
-	url = https://github.com/AndrewBelt/osdialog
-[submodule "dep/imgui"]
-	path = dep/imgui
+[submodule "vendor/SDL_image"]
+	path = vendor/SDL_image
+	url = https://github.com/libsdl-org/SDL_image
+[submodule "vendor/SDL3"]
+	path = vendor/SDL3
+	url = https://github.com/libsdl-org/SDL
+[submodule "vendor/imgui"]
+	path = vendor/imgui
 	url = https://github.com/ocornut/imgui
-[submodule "dep/spdlog"]
-	path = dep/spdlog
+[submodule "vendor/spdlog"]
+	path = vendor/spdlog
 	url = https://github.com/gabime/spdlog
+[submodule "vendor/osdialog"]
+	path = vendor/osdialog
+	url = https://github.com/AndrewBelt/osdialog

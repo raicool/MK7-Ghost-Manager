@@ -36,5 +36,5 @@
 // Dear Imgui
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
-#include <backends/imgui_impl_sdl2.h>
-#include <backends/imgui_impl_sdlrenderer2.h>
+#include <backends/imgui_impl_sdl3.h>
+#include <backends/imgui_impl_sdlrenderer3.h>

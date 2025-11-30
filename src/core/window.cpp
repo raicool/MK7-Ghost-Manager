@@ -10,13 +10,9 @@ void window::init(app* application, const char* window_title, uint16_t win_width
 	height = win_height;
 	framerate = win_framerate;
 
-	main_window = SDL_CreateWindow(window_title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, win_width, win_height, flags);
-	sdlrenderer = SDL_CreateRenderer(main_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	SDL_SetHint(SDL_HINT_RENDER_LOGICAL_SIZE_MODE, "overscan");
-
-	if (!main_window)
+	if (!SDL_CreateWindowAndRenderer(window_title, win_width, win_height, 0, &main_window, &sdlrenderer))
 	{
-		LOG_ERROR("SDL Window could not be created {}", SDL_GetError());
+		LOG_ERROR("SDL Window/Renderer could not be created \n\tSDL_GetError(): {}", SDL_GetError());
 	}
 
 	panels = new panel();
@@ -25,8 +21,8 @@ void window::init(app* application, const char* window_title, uint16_t win_width
 
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
-	ImGui_ImplSDL2_InitForSDLRenderer(main_window, sdlrenderer);
-	ImGui_ImplSDLRenderer2_Init(sdlrenderer);
+	ImGui_ImplSDL3_InitForSDLRenderer(main_window, sdlrenderer);
+	ImGui_ImplSDLRenderer3_Init(sdlrenderer);
 
 	// TODO: find 3ds' entire unicode range
 	ImGuiIO& io = ImGui::GetIO();
@@ -37,7 +33,7 @@ void window::init(app* application, const char* window_title, uint16_t win_width
 	builder.AddRanges(extended_symbols);
 	builder.BuildRanges(&ranges);
 
-	io.Fonts->AddFontFromFileTTF("res/font/rodin-b.otf",  14.0f, 0, ranges.Data);
+	io.Fonts->AddFontFromFileTTF("res/font/rodin-b.otf", 12.0f, 0, ranges.Data);
 	io.Fonts->Build();
 }
 
@@ -50,8 +46,8 @@ void window::update()
 
 void window::render_panels()
 {
-	ImGui_ImplSDL2_NewFrame(main_window);
-	ImGui_ImplSDLRenderer2_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
+	ImGui_ImplSDLRenderer3_NewFrame();
 	ImGui::NewFrame();
 
 	//ImGui::ShowDemoWindow(nullptr);
@@ -59,5 +55,5 @@ void window::render_panels()
 	panels->render();
 
 	ImGui::Render();
-	ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
+	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlrenderer);
 }

@@ -8,9 +8,8 @@
 
 void app::init()
 {
-	main_window.init(this, "MK7 Spotpass Ghost Manager v0.2.5", 848, 480, 0, SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE);
-
 	logger::init_logger();
+	main_window.init(this, std::format("MK7 Spotpass Ghost Manager v{}", VERSION).c_str() , 848, 480, 0, SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE | SDL_WINDOWPOS_CENTERED);
 
 	texture_manager.current_renderer = main_window.sdlrenderer;
 	texture_manager.load_ghost_textures();
@@ -23,11 +22,11 @@ int app::update()
 		main_window.deltatime.before = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 		SDL_PollEvent(&main_window.sdlevent);
-		ImGui_ImplSDL2_ProcessEvent(&main_window.sdlevent);
+		ImGui_ImplSDL3_ProcessEvent(&main_window.sdlevent);
 
 		switch (main_window.sdlevent.type)
 		{
-		case SDL_QUIT:
+		case SDL_EVENT_QUIT:
 			return 0;
 		}
 
@@ -46,7 +45,7 @@ void app::open_spotpass_file()
 	spotpass* new_spotpass = new spotpass();
 	uint8_t cup = new_spotpass->load(file_dir);
 
-	if (cup >= 0 && cup <= 8)
+	if (cup >= 0 && cup <= 32)
 	{
 		LOG_DEBUG("Cup = {}, file = {}", cup, std::filesystem::path(file_dir).filename().string().c_str());
 		if (spotpass_files[cup - 1]) delete spotpass_files[cup - 1];
@@ -75,6 +74,11 @@ void app::open_spotpass_folder()
 			spotpass_files[cup - 1] = new_spotpass;
 		}
 	}
+}
+
+void app::create_spotpass_folder()
+{
+	return;
 }
 
 app::~app()
