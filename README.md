@@ -13,6 +13,7 @@ credits to B_squo for replay documentation https://twitter.com/B_squo
 - [ ] get spotpass files directly from 3ds using luma debugger / an ftp server
 - [ ] auto update feature
 - [ ] ghost sorting
+- [ ] support for CTGP-7 custom cups
 
 ## Usage
 ## Ubuntu
