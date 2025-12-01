@@ -73,6 +73,7 @@ endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
     "src"
+    "vendor/cpp-httplib"
     "vendor/imgui"
     "vendor/sdl3/include/sdl3"
     "vendor/sdl3/include"
