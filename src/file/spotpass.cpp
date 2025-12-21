@@ -58,7 +58,7 @@ uint8_t spotpass::load(const char* dir)
 			
 			offset += 12;
 			bin_read<uint32_t>(&u32buffer, spotpass_data, offset);
-			ghosts[ghost_count]->course_id    = (u32buffer >> 0)  & 0x7f; // 7 bit
+			ghosts[ghost_count]->course_id    = (u32buffer >> 0)  & 0x3f; // 7 bit
 			ghosts[ghost_count]->character_id = (u32buffer >> 6)  & 0x1f; // 5 bit
 			ghosts[ghost_count]->kart_id      = (u32buffer >> 11) & 0x1f; // 5 bit
 			ghosts[ghost_count]->tire_id      = (u32buffer >> 16) & 0x0f; // 4 bit
