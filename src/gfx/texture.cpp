@@ -20,7 +20,7 @@ void texture::load_ghost_textures()
 	driver[CHAR_MII_FEMALE]   = texture::add_texture("res/tex/Driver/mif.png", "mii_female");
 	driver[CHAR_PEACH]        = texture::add_texture("res/tex/Driver/pc.png", "peach");
 	driver[CHAR_ROSALINA]     = texture::add_texture("res/tex/Driver/rs.png", "rosalina");
-	driver[CHAR_SHY_GUY]      = texture::add_texture("res/tex/Driver/mim.png", "shy_guy");
+	driver[CHAR_SHY_GUY]      = texture::add_texture("res/tex/Driver/sh.png", "shy_guy");
 	driver[CHAR_TOAD]         = texture::add_texture("res/tex/Driver/td.png", "toad");
 	driver[CHAR_WARIO]        = texture::add_texture("res/tex/Driver/wr.png", "wario");
 	driver[CHAR_WIGGLER]      = texture::add_texture("res/tex/Driver/wig.png", "wiggler");
