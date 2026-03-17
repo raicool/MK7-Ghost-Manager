@@ -13,3 +13,6 @@
 [submodule "vendor/osdialog"]
 	path = vendor/osdialog
 	url = https://github.com/AndrewBelt/osdialog
+[submodule "vendor/cpp-httplib"]
+	path = vendor/cpp-httplib
+	url = https://github.com/yhirose/cpp-httplib
