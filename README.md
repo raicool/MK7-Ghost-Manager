@@ -17,10 +17,10 @@ credits to B_squo for replay documentation https://twitter.com/B_squo
 
 ## Usage
 ## Ubuntu
-the ghost manager requires sdl2 and sdl2_image to be installed
+the ghost manager requires sdl3 and sdl3_image to be installed
 ```
-sudo apt-get install libsdl2-2.0-0
-sudo apt-get install libsdl2-image-2.0-0
+sudo apt-get install libsdl3-2.0-0
+sudo apt-get install libsdl3-image-2.0-0
 ```
 
 ## Windows
