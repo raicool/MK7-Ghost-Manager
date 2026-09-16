@@ -34,7 +34,7 @@ if (UNIX)
 endif()
 
 add_executable(${PROJECT_NAME} ${OSDIALOG_SOURCE} ${CXX_SOURCE} ${IMGUI_SOURCE})
-target_precompile_headers(${PROJECT_NAME} PRIVATE "src/pch.h")
+target_precompile_headers(${PROJECT_NAME} PRIVATE "include/pch.h")
 target_sources(${PROJECT_NAME} PRIVATE "resource.rc")
 
 if (MSVC)
@@ -90,7 +90,7 @@ if (UNIX)
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
-    "src"
+    "include"
     "vendor/cpp-httplib"
     "vendor/imgui"
     "vendor/sdl3/include/sdl3"

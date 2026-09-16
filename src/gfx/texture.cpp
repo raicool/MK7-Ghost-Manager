@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "texture.h"
+#include "gfx/texture.h"
 
 #include "common/log.h"
 #include "common/type.h"
