@@ -214,16 +214,20 @@ void panel::render()
 							current_cup->extract_ghost(current_ghost);
 						}
 
-						if (ImGui::Button("Export Mii Data (.mii)"))
+						if (ImGui::Button("Export Mii Data (.cfsd)"))
 						{
 							const uint64_t system_id = current_ghost->mii_data.system_id;
-							auto file = create_file(std::format("{:016x}.mii", system_id).c_str(), "All\0*.*\0Mii (*.mii)\0*.mii\0");
 
-							std::fstream mii_stream(file, std::ios::out | std::ios::binary);
+							auto file = create_file(std::format("{:016x}.cfsd", system_id).c_str(), "CTR Face Store Data (*.cfsd)\0*.cfsd\0All\0*.*\0");
 
-							bin_write<mii>(&current_ghost->mii_data, mii_stream, (uint32_t)0, sizeof(mii));
+							if (file)
+							{
+								std::fstream mii_stream(file, std::ios::out | std::ios::binary);
 
-							mii_stream.close();
+								bin_write<mii>(&current_ghost->mii_data, mii_stream, (uint32_t)0, sizeof(mii));
+
+								mii_stream.close();
+							}
 						}
 
 						ImGui::PopID();
@@ -245,7 +249,14 @@ void panel::draw_ghost_details(std::unique_ptr<ghost>& _ghost)
 	/*
 	*	ghost character, player name, and flag
 	*/
-	ImGui::Image(g_texture_manager.driver[_ghost->character_id], { 64, 64 });
+	if (_ghost->character_id == character::CHAR_MII_MALE || _ghost->character_id == character::CHAR_MII_FEMALE)
+	{
+		render_mii_image(&_ghost->mii_data);
+	}
+	else
+	{
+		ImGui::Image(g_texture_manager.driver[_ghost->character_id], { 64, 64 });
+	}
 	ImGui::SameLine();
 	
 	if (display_flags)
@@ -302,6 +313,35 @@ void panel::draw_ghost_details(std::unique_ptr<ghost>& _ghost)
 	);
 
 	ImGui::NewLine();
+	
+	if (ImGui::TreeNode("View Mii Image"))
+	{
+		render_mii_image(&_ghost->mii_data, 128);
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Header Hex View"))
+	{
+		render_hex_view((uint8_t*)&_ghost->serialized, sizeof(raw_ghost));
+
+		ImGui::TreePop();
+	}
+
+	ImGui::NewLine();
+}
+
+void render_mii_image(mii* mii_data, uint16_t size)
+{
+	void* __texture = g_texture_manager.request_mii_texture(mii_data);
+	if (__texture)
+	{
+		ImGui::Image(__texture, { (float)size, (float)size });
+	}
+	else
+	{
+		ImGui::Image(g_texture_manager.symbol[2], { (float)size, (float)size });
+	}
 }
 
 void draw_flag(char nation_id)

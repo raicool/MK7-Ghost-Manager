@@ -25,4 +25,5 @@ struct panel
 	void render();
 };
 
+void render_mii_image(mii* mii_data, uint16_t size = 64);
 void draw_flag(char nation_id);

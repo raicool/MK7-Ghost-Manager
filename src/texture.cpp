@@ -1,8 +1,13 @@
 #include "pch.h"
 #include "texture.h"
 
+#include "external/miiconv.h"
 #include "common/log.h"
 #include "common/type.h"
+#include "mii.h"
+#include <queue>
+
+extern SDL_Renderer* g_renderer;
 
 void texture::load_ghost_textures()
 {
@@ -69,6 +74,7 @@ void texture::load_ghost_textures()
 	// symbols
 	symbol[0] = texture::add_texture("res/tex/Symbol/first_person.png", "first_person_badge");
 	symbol[1] = texture::add_texture("res/tex/Symbol/flag_atlas.png", "flag_atlas");
+	symbol[2] = texture::add_texture("res/tex/Symbol/mii_unknown.png", "mii_unknown");
 	LOG_TRACE("extra textures loaded");
 }
 
@@ -76,7 +82,6 @@ void texture::load_ghost_textures()
 void* texture::add_texture(const char* dir, std::string_view id)
 {
 	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, 0);
-
 	SDL_Surface* surface = IMG_Load(dir);
 
 	if (!surface)
@@ -93,4 +98,101 @@ void* texture::add_texture(const char* dir, std::string_view id)
 
 	texture_count++;
 	return textures[id];
+}
+
+struct queue_data
+{
+	mii* mii_raw_data;
+	async_texture* texture;
+};
+
+std::mutex mlock;
+std::queue<queue_data> texture_queue;
+std::condition_variable cv;
+
+void __async_job_fetch_texture()
+{
+	std::unique_lock<std::mutex> lock(mlock);
+
+	while (1)
+	{
+		cv.wait(lock, []{ return texture_queue.size() > 0; });
+
+		auto job = texture_queue.front();
+		texture_queue.pop();
+
+		//https://mii-unsecure.ariankordi.net/miis/image.png?data=000f165c66757884939e959897999f9ca0b3b9bfbdc4c8cfced2dce0eff5c3ecf3fafeedf6ecf3f401080f0a11181a&resourceType=low&shaderType=ffliconwithbody&bodyType=3ds&characterYRotate=333&lightEnable=true
+		httplib::Client client = httplib::Client("https://mii-unsecure.ariankordi.net");
+		const std::string mii_url = "/miis/image.png?data={}&width=128&resourceType=low&shaderType=ffliconwithbody&bodyType=3ds&characterYRotate=333&lightEnable=true";
+
+		thread_local char s[(sizeof(mii) * 2) + 1];
+		s[sizeof(mii)] = '\00';
+
+		char* p = s;
+		for (size_t i = 0; i < sizeof(mii); i++)
+		{
+			uint8_t data = *((uint8_t*)job.mii_raw_data + i);
+			p += sprintf(p, "%.2x", data);
+		}
+
+		const std::string mii_data_string_hexadecimal(s);
+
+		const std::string formatted = std::vformat(mii_url, std::make_format_args(mii_data_string_hexadecimal));
+
+		SDL_IOStream* img = nullptr;
+		std::stringstream __dummy_stream;
+
+		httplib::Result res = client.Get(formatted,
+			[&](const char* data, size_t data_length)
+			{
+				__dummy_stream.write(data, data_length);
+				LOG_TRACE("data_length: {}", data_length);
+				return true;
+			}
+		);
+
+		auto view = __dummy_stream.view();
+		img = SDL_IOFromMem((void*)view.data(), view.size());
+
+		job.texture->surface = IMG_Load_IO(img, true);
+		job.texture->status = SURFACE_CREATED;
+	}
+}
+
+std::thread t(__async_job_fetch_texture);
+
+void* texture::request_mii_texture(mii* mii_raw_data)
+{
+#if BUILD_WITH_SSL_SUPPORT
+	const uint16_t crc16 = mii_raw_data->crc16;
+
+	if (mii_textures.contains(crc16))
+	{
+		if (mii_textures.at(crc16).status == SURFACE_CREATED)
+		{
+			void* data = SDL_CreateTextureFromSurface(g_renderer, mii_textures.at(crc16).surface);
+			LOG_DEBUG("new mii texture loaded at address {}", data);
+			SDL_DestroySurface(mii_textures.at(crc16).surface);
+
+			mii_textures.at(crc16).surface = nullptr;
+			mii_textures.at(crc16).data = (SDL_Texture*)data;
+			mii_textures.at(crc16).status = OK;
+		}
+
+		return mii_textures.at(crc16).data;
+	}
+	else
+	{
+		mii_textures[crc16] = { .status = WORKING, .data = nullptr };
+
+		texture_queue.push({ mii_raw_data, &mii_textures[crc16] });
+		cv.notify_all();
+
+		// return placeholder texture
+		return nullptr;
+	}
+#else
+	return nullptr;
+#endif
+
 }
