@@ -1,10 +1,10 @@
 #include "pch.h"
 
 #include "common/common.h"
-#include "gfx/texture.h"
+#include "texture.h"
 #include "spotpass.h"
 #include "version.h"
-#include "window.h"
+#include "panel.h"
 
 #define NANOSECONDS 1000000000
 #define FRAMETIME (NANOSECONDS / 240)
@@ -17,13 +17,16 @@ SDL_Window* g_window = nullptr;
 SDL_Renderer* g_renderer = nullptr;
 texture g_texture_manager;
 
+ImFont* g_font_default = nullptr;
+ImFont* g_font_rodin = nullptr;
+ImFont* g_font_monospace = nullptr;
+
 int main()
 {
-	frame __frametime;
 	SDL_Event __sdl_event;
 	panel __imgui_panel;
 
-	g_window = SDL_CreateWindow(std::format("MK7 Spotpass Ghost Manager v{}", VERSION).c_str(), 848, 480, SDL_WINDOW_RESIZABLE);
+	g_window = SDL_CreateWindow(std::format("MK7 Spotpass Ghost Manager v{} ({})", VERSION, GIT_COMMIT_HASH).c_str(), 848, 480, SDL_WINDOW_RESIZABLE);
 	g_renderer = SDL_CreateRenderer(g_window, NULL);
 
 	ImGui::CreateContext();
@@ -41,7 +44,10 @@ int main()
 	builder.AddRanges(extended_symbols);
 	builder.BuildRanges(&ranges);
 
-	io.Fonts->AddFontFromFileTTF("res/font/rodin-b.otf", 12.0f, 0, ranges.Data);
+	g_font_default = io.Fonts->AddFontFromFileTTF("res/font/rodin-db.otf", 12.0f, 0, ranges.Data);
+	g_font_rodin = io.Fonts->AddFontFromFileTTF("res/font/rodin-b.otf", 12.0f, 0, ranges.Data);
+	g_font_monospace = io.Fonts->AddFontDefault();
+
 	io.Fonts->Build();
 
 	logger::init_logger();
@@ -82,6 +88,6 @@ int main()
 		ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), g_renderer);
 
 		SDL_RenderPresent(g_renderer);
-		SDL_DelayPrecise(FRAMETIME - (SDL_CONVERT_PERFORMANCE_TIME - _start_interv));
+		SDL_DelayPrecise(std::clamp(FRAMETIME - (SDL_CONVERT_PERFORMANCE_TIME - _start_interv), 0.0, (double)FRAMETIME));
 	}
 }

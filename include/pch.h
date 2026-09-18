@@ -7,20 +7,23 @@
 #include <fstream>
 #include <filesystem>
 #include <codecvt>
-#include <stdio.h>
+#include <cstdio>
+#include <algorithm>
 
 #ifdef WIN32
 #define _WIN32_WINNT 0x0A00
 #endif
 
 // httplib
+#ifdef BUILD_WITH_SSL_SUPPORT
 #define CPPHTTPLIB_OPENSSL_SUPPORT
+#endif
 #include <httplib.h>
 
 // Windows
 #ifdef WIN32
 #include <Windows.h>
-#include <shlobj_core.h>
+#include <ShlObj.h>
 #endif
 // Linux
 #ifdef __linux__ 

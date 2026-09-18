@@ -4,11 +4,25 @@ project("ghost-manager" LANGUAGES C CXX)
 
 option(SDL_IMAGE_VENDORED "use vendored SDL3_image repository" ON)
 option(SDL_VENDORED "use vendored SDL3 repository" ON)
-option(BUILD_WITH_SSL_SUPPORT "requires OpenSSL package, used to fetch repository status" ON)
+option(BUILD_WITH_SSL_SUPPORT "requires OpenSSL package, used to fetch repository status" OFF)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_compile_definitions("DEBUG=$<CONFIG:Debug>")
+
+find_package(Git)
+if(Git_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} --no-pager log -n 1 HEAD "--pretty=format:%h"
+    OUTPUT_VARIABLE output
+    RESULT_VARIABLE result
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  if(result EQUAL 0)
+    add_compile_definitions("GIT_COMMIT_HASH=\"${output}\"")
+  endif()
+endif()
 
 # add c++ files
 file(GLOB_RECURSE CXX_SOURCE "src/*.cpp")
@@ -34,7 +48,7 @@ if (UNIX)
 endif()
 
 add_executable(${PROJECT_NAME} ${OSDIALOG_SOURCE} ${CXX_SOURCE} ${IMGUI_SOURCE})
-target_precompile_headers(${PROJECT_NAME} PRIVATE "include/pch.h")
+#target_precompile_headers(${PROJECT_NAME} PRIVATE "include/pch.h")
 target_sources(${PROJECT_NAME} PRIVATE "resource.rc")
 
 if (MSVC)
@@ -56,6 +70,7 @@ if (BUILD_WITH_SSL_SUPPORT)
     find_package(OpenSSL REQUIRED)
     message("OPENSSL_SSL_LIBRARY: ${OPENSSL_SSL_LIBRARY}")
     message("OPENSSL_LIBRARIES: ${OPENSSL_LIBRARIES}")
+    add_compile_definitions("BUILD_WITH_SSL_SUPPORT")
     target_link_libraries(${PROJECT_NAME} PUBLIC OpenSSL::SSL)
     target_include_directories(${PROJECT_NAME} PUBLIC ${OPENSSL_INCLUDE_DIR})
 endif (BUILD_WITH_SSL_SUPPORT)

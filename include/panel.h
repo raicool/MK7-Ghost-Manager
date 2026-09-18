@@ -17,12 +17,11 @@ struct panel
 {
 	uint32_t panel_flags = PANEL_DEFAULT; //
 	std::shared_ptr<spotpass> current_cup = nullptr; //< which cup to display ghosts for in PANEL_GHOST_LIST
-	int32_t course = 0; //< which course to display ghosts for in PANEL_GHOST_LIST
-	bool show_all_course = false; //< toggle whether to show all courses within a cup or just 1
+	int32_t course_idx = 0; //< which course to display ghosts for in PANEL_GHOST_LIST
 	bool is_cup_selected = false;
 	bool display_flags   = true;
 	
-	void draw_ghost_details(ghost* _ghost);
+	void draw_ghost_details(std::unique_ptr<ghost>& _ghost);
 	void render();
 };
 

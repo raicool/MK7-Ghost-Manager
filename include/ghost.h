@@ -2,51 +2,157 @@
 
 #include "mii.h"
 
-// 3 byte bitfield
-#pragma pack(push, 0)
-struct packed_time
-{
-	unsigned min : 7;
-	unsigned sec : 7;
-	unsigned ms  : 10;
-};
-
 enum kcp
 {
-	UNKNOWN = 0X00,
+	UNKNOWN = 0x00,
 	SECTION = 0x01,
 	LAP = 0x03,
 };
 
+#pragma pack(push, 1)
+struct packed_time
+{
+// 	uint8_t min : 7;
+// 	uint8_t sec : 7;
+// 	uint8_t ms : 10;
+
+	uint8_t data[0x03];
+
+	inline uint8_t min() const
+	{
+		return data[0] & 0x7f;
+	}
+
+	inline uint8_t sec() const
+	{
+		uint8_t lo = ((data[0] & 0x80) >> 7);
+		uint8_t hi = ((data[1] & 0x3f) << 1);
+		return (lo | hi) & 0x7f;
+	}
+
+	inline uint16_t ms() const
+	{
+		return ((data[1] & 0xc0) >> 6) | ((data[2] << 2) & 0x3ff);
+	}
+};
+static_assert(sizeof(packed_time) == 0x03, "invalid size of packed_time");
+
+struct packed_driver
+{
+	uint8_t data[0x03];
+
+	inline uint8_t min() const
+	{
+		return data[0] & 0x7f;
+	}
+
+	inline uint8_t sec() const
+	{
+		uint8_t lo = ((data[0] & 0x80) >> 7);
+		uint8_t hi = ((data[1] & 0x3f) << 1);
+		return (lo | hi) & 0x7f;
+	}
+
+	inline uint16_t ms() const
+	{
+		return ((data[1] & 0xc0) >> 6) | ((data[2] << 2) & 0x3ff);
+	}
+};
+static_assert(sizeof(packed_driver) == 0x03, "invalid size of raw_ghost");
+
 struct raw_ghost
 {
-	char magic[0x4];
-	packed_time finished_time;
-	unsigned padding_0x8 : 4;
-	bool gyro_flag : 1;
-	uint8_t kcp_mode : 3;
+	uint32_t magic : 32;
 
-	packed_time lap1_time;
-	packed_time lap2_time;
-	packed_time lap3_time;
-	unsigned wing : 4;
-	unsigned tire : 4;
-	unsigned kart : 5;
-	unsigned character : 5;
-	unsigned course : 6;
-	char name_utf16be[0x14];
-	char padding_0x00[0x18];
+	packed_time finished_time;
+	
+	uint8_t data[0x10];
+
+	inline uint8_t kcp() const { return data[0] & 0x07; }
+	inline bool gyro_flag() const { return (data[0] >> 3) & 0x01; }
+
+	// would loved to have made these all bitfields but we cant always have nice things
+	
+	inline uint8_t lap1_min() const 
+	{ 
+		return data[1] & 0x7f; 
+	}
+
+	inline uint8_t lap1_sec() const 
+	{ 
+		return (data[1] >> 7) & 0x1 | (data[2] << 1) & 0x3f; 
+	}
+
+	inline uint16_t lap1_ms() const 
+	{ 
+		return (data[2] >> 6) & 0x03 | (data[3] << 2) & 0x3fc;
+	}
+
+	inline uint8_t lap2_min() const
+	{
+		return (data[4] >> 1) & 0x7f;
+	}
+
+	inline uint8_t lap2_sec() const
+	{
+		return data[5] & 0x7f;
+	}
+
+	inline uint16_t lap2_ms() const
+	{
+		return (data[5] >> 7) & 0x01 | (data[6] << 1) & 0x3fe;
+	}
+
+	inline uint8_t lap3_min() const
+	{
+		return (data[7] >> 1) & 0x7f;
+	}
+
+	inline uint8_t lap3_sec() const
+	{
+		return data[8] & 0x7f;
+	}
+
+	inline uint16_t lap3_ms() const
+	{
+		return (data[9] & 0xff) | (data[10] & 0xff << 8);
+	}
+
+// 	uint8_t lap1_min : 7;
+// 	uint8_t lap1_sec : 7;
+// 	uint16_t lap1_ms : 10;
+// 	uint8_t a : 1;
+// 
+// 	uint8_t lap2_min : 7;
+// 	uint8_t lap2_sec : 7;
+// 	uint16_t lap2_ms : 10;
+// 
+// 	uint8_t lap3_min : 7;
+// 	uint8_t lap3_sec : 7;
+// 	uint8_t padding4 : 1;
+// 	uint16_t lap3_ms : 10;
+// 
+// 	uint32_t padding1 : 22;
+// 	uint8_t course : 6;
+// 	uint8_t character : 5;
+// 	uint8_t kart : 5;
+// 	uint8_t tire : 4;
+// 	uint8_t wing : 4;
+
+ 	//char name_utf16be[0x14];
 };
+static_assert(sizeof(raw_ghost) == 0x17, "invalid size of raw_ghost");
 #pragma pack(pop)
 
 struct ghost
 {
-	uint32_t file_offset = 0; //< where ghost's data starts in spotpass file (if applicable)
-	uint32_t ghost_id = 0; //< where ghost's data starts in spotpass file (if applicable)
+	uint32_t file_offset = 0;
+	uint32_t ghost_id = 0;
 
 	std::basic_string<char16_t> player_name;
 
 	raw_ghost serialized;
+
 	
 	uint8_t country_id;
 
@@ -58,4 +164,6 @@ struct ghost
 	uint8_t glider_id;
 
 	mii mii_data;
+
+	uint8_t kdpad_data[0x27D8];
 };

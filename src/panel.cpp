@@ -2,19 +2,20 @@
 
 #include "common/alias.h"
 #include "common/utils.h"
-#include "gfx/texture.h"
+#include "texture.h"
 #include "ghost.h"
 #include "panel.h"
 #include "spotpass.h"
-#include "window.h"
-
-std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf8_conv;
+#include <imgui_internal.h>
 
 extern SDL_Window* g_window;
 extern SDL_Renderer* g_renderer;
-extern spdata_vector g_spotpass_files;
+extern std::vector<std::shared_ptr<spotpass>> g_spotpass_files;
 extern texture g_texture_manager;
 
+extern ImFont* g_font_rodin;
+
+std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf8_conv;
 #define TOOLTIP(x, ...) if (ImGui::IsItemHovered()) ImGui::SetTooltip(x, __VA_ARGS__)
 
 void panel::render()
@@ -49,15 +50,34 @@ void panel::render()
 		ImGui::EndMainMenuBar();
 	}
 
+	ImGuiID dockspace_id = ImGui::GetID("Dockspace");
+	static bool init = true;
+	ImVec2 mainSize = ImGui::GetMainViewport()->Size;
+
+	if (init)
+	{
+		init = false;
+		ImGui::DockBuilderRemoveNode(dockspace_id);
+		ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_CentralNode);
+		ImGui::DockBuilderSetNodeSize(dockspace_id, mainSize);
+
+
+		ImGuiID dock_id_left = 0, dock_id_right = 0;
+		ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.25f, &dock_id_left, &dock_id_right);
+		ImGui::DockBuilderDockWindow("Cups", dock_id_left);
+		ImGui::DockBuilderDockWindow("Ghost", dock_id_right);
+
+		ImGui::DockBuilderFinish(dockspace_id);
+	}
+
+	ImGui::DockSpaceOverViewport(dockspace_id, ImGui::GetMainViewport());
+
 	if (panel_flags & panels::PANEL_CUPS_LIST)
 	{
-		ImGui::SetNextWindowSize({ (w / 3.0f), h - 20.0f });
-		ImGui::SetNextWindowPos({ 1, 20 });
-
 		static char* items[4];
 		static int idx = 0;
 
-		ImGui::Begin("Cups", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration);
+		ImGui::Begin("Cups", 0, ImGuiWindowFlags_NoCollapse);
 		ImGui::Text("%f", ImGui::GetIO().Framerate);
 
 		for (auto& _spdata : g_spotpass_files)
@@ -70,7 +90,7 @@ void panel::render()
 			{
 				is_cup_selected = true;
 				current_cup = _spdata;
-				course = cup_courses[_cup][idx];
+				course_idx = idx;
 
 				items[0] = const_cast<char*>(course_name[cup_courses[_cup][0]]);
 				items[1] = const_cast<char*>(course_name[cup_courses[_cup][1]]);
@@ -85,7 +105,11 @@ void panel::render()
 
 		if (is_cup_selected)
 		{
-			if (ImGui::ListBox("Courses", &idx, items, 4, 4)) course = cup_courses[current_cup->cup_id][idx];
+			if (ImGui::ListBox("Courses", &idx, items, 4, 4))
+			{
+				course_idx = idx;
+			}
+
 			ImGui::Text(current_cup->file_directory.c_str());
 
 			ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
@@ -106,7 +130,6 @@ void panel::render()
 		}
 
 		ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
-		ImGui::Checkbox("Display All Courses In Cup", &show_all_course);
 		ImGui::Checkbox("Display Flags", &display_flags);
 
 		ImGui::PushID("Load Failed");
@@ -124,42 +147,76 @@ void panel::render()
 
 	if (panel_flags & panels::PANEL_GHOST_LIST)
 	{
-		ImGui::SetNextWindowSize({ w - (w / 3.0f), h - 20.0f });
-		ImGui::SetNextWindowPos({ 1 + (w / 3.0f), 20 });
-		ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+		ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoCollapse);
 
 		/*
 		*	Cup ghosts will be rendered here
 		*/
 		if (current_cup)
 		{
+			ImGui::PushFont(g_font_rodin);
 			ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH);
 
-			for (uint32_t i = 0; i < current_cup->ghost_count; i++)
+			course_ghosts_array_t* coursedata = current_cup->get_course(course_idx);
+
+			if (coursedata)
 			{
-				if (current_cup->ghosts[i]->course_id == course || show_all_course)
+				for (uint32_t i = 0; i < 20; i++)
 				{
+					std::unique_ptr<ghost>& current_ghost = coursedata->at(i);
+
+					if (current_ghost == nullptr)
+					{
+						continue;
+					}
+
+					
 					ImGui::PushID(i);
 					ImGui::TableNextRow();
 					ImGui::TableSetColumnIndex(0);
 
-					draw_ghost_details(current_cup->ghosts[i]);
+					draw_ghost_details(current_ghost);
 
-					if (ImGui::Button("Delete Ghost"))    current_cup->delete_ghost(current_cup->ghosts[i]);
-					if (ImGui::Button("Overwrite Ghost")) current_cup->overwrite_ghost(current_cup->ghosts[i]->file_offset, open_file());
-					if (ImGui::Button("Extract Ghost"))   current_cup->extract_ghost(current_cup->ghosts[i]);
+					if (ImGui::Button("Delete Ghost"))
+					{
+						current_cup->delete_ghost(current_ghost);
+					}
+
+					if (ImGui::Button("Overwrite Ghost"))
+					{
+						current_cup->overwrite_ghost(current_ghost->file_offset, open_file());
+					}
+
+					if (ImGui::Button("Extract Ghost"))
+					{
+						current_cup->extract_ghost(current_ghost);
+					}
+
+					if (ImGui::Button("Export Mii Data (.mii)"))
+					{
+						const uint64_t system_id = current_ghost->mii_data.system_id;
+						auto file = create_file(std::format("{:016x}.mii", system_id).c_str(), "All\0*.*\0Mii (*.mii)\0*.mii\0");
+
+						std::fstream mii_stream(file, std::ios::out | std::ios::binary);
+
+						bin_write<mii>(&current_ghost->mii_data, mii_stream, (uint32_t)0, sizeof(mii));
+
+						mii_stream.close();
+					}
 
 					ImGui::PopID();
 				}
 			}
+
 			ImGui::EndTable();
+			ImGui::PopFont();
 		}
 
 		ImGui::End();
 	}
 }
 
-void panel::draw_ghost_details(ghost* _ghost)
+void panel::draw_ghost_details(std::unique_ptr<ghost>& _ghost)
 {
 	/*
 	*	ghost character, player name, and flag
@@ -170,7 +227,6 @@ void panel::draw_ghost_details(ghost* _ghost)
 	if (display_flags)
 	{
 		draw_flag(_ghost->country_id);
-		//ImGui::Text("%i", _ghost->country_id);
 	}
 
 	ImGui::SameLine();
@@ -186,7 +242,8 @@ void panel::draw_ghost_details(ghost* _ghost)
 	/*
 	*	first person indicator
 	*/
-	if (_ghost->serialized.gyro_flag)
+//	if (_ghost->serialized.gyro_flag)
+	if (0)
 	{
 		ImGui::SameLine(ImGui::GetWindowWidth() - 64);
 		ImGui::Image(g_texture_manager.symbol[0x00], { 32, 32 });
@@ -205,26 +262,20 @@ void panel::draw_ghost_details(ghost* _ghost)
 	ImGui::Text("Course: %s", course_name[_ghost->course_id]);
 
 	const packed_time finished_time = _ghost->serialized.finished_time;
-	const packed_time lap_times[3] =
-	{
-		_ghost->serialized.lap1_time,
-		_ghost->serialized.lap2_time,
-		_ghost->serialized.lap3_time,
-	};
 
 	ImGui::TextColored(
 		ImVec4{ 1.0f, 0.9f, 0.1f, 1.0f }, 
 		"Time: %i:%02i.%03i", 
-		finished_time.min, finished_time.sec, finished_time.ms
+		finished_time.min(), finished_time.sec(), finished_time.ms()
 	);
 
 	TOOLTIP(
 		"Lap 1: %i:%02i.%03i\n"
 		"Lap 2: %i:%02i.%03i\n"
 		"Lap 3: %i:%02i.%03i\n",
-		lap_times[0].min, lap_times[0].sec, lap_times[0].ms,
-		lap_times[1].min, lap_times[1].sec, lap_times[1].ms,
-		lap_times[2].min, lap_times[2].sec, lap_times[2].ms
+		_ghost->serialized.lap1_min(), _ghost->serialized.lap1_sec(), _ghost->serialized.lap1_ms(),
+		_ghost->serialized.lap2_min(), _ghost->serialized.lap2_sec(), _ghost->serialized.lap2_ms(),
+		_ghost->serialized.lap3_min(), _ghost->serialized.lap3_sec(), _ghost->serialized.lap3_ms()
 	);
 
 	ImGui::NewLine();

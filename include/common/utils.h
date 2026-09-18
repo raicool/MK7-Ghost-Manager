@@ -3,9 +3,15 @@
 #include "log.h"
 #include "type.h"
 
-#include "gfx/texture.h"
+#include "texture.h"
 
 #define BITMASK(x) (1U<<(x))
+
+#ifdef _MSC_VER
+#define PACKED __pragma(pack(1))
+#else
+#define PACKED __attribute__((packed))
+#endif
 
 // file management
 static char dir_buf[256]{ 0 };
@@ -84,7 +90,7 @@ static const char* open_folder()
 /*
 *	creates an empty file from a save file prompt and returns the absolute path
 */
-static const char* create_file(const char* name = nullptr)
+static const char* create_file(const char* name = nullptr, const char* filter = "All\0*.*\0Replay (*.dat)\0*.dat\0")
 {
 	if (name) strcpy(dir_buf, name);
 #ifdef WIN32
@@ -92,7 +98,7 @@ static const char* create_file(const char* name = nullptr)
 	f.lStructSize    = sizeof(f);
 	f.lpstrFile      = dir_buf;         //< file name
 	f.nMaxFile       = sizeof(dir_buf); //< max directory length
-	f.lpstrFilter    = "All\0*.*\0Replay (*.dat)\0*.dat\0";
+	f.lpstrFilter    = filter;
 	f.nFilterIndex   = 1;
 	f.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
 	GetSaveFileNameA(&f) ? LOG_INFO("file \"{}\" created", dir_buf) : void();

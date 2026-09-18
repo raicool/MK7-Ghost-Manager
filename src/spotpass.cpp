@@ -5,7 +5,7 @@
 
 #define GHOST_SIZE 0x2898
 
-spdata_vector g_spotpass_files;
+std::vector<std::shared_ptr<spotpass>> g_spotpass_files;
 
 void open_spotpass_file()
 {
@@ -45,9 +45,22 @@ void open_spotpass_folder()
 	}
 }
 
-spdata_vector* get_spotpass_files()
+std::vector<std::shared_ptr<spotpass>> get_spotpass_files()
 {
-	return &g_spotpass_files;
+	return g_spotpass_files;
+}
+
+course_ghosts_array_t* spotpass::get_course(uint8_t index)
+{
+	
+	switch (index)
+	{
+	case 0: return &this->course_1;
+	case 1: return &this->course_2;
+	case 2: return &this->course_3;
+	case 3: return &this->course_4;
+	default: return nullptr;
+	}
 }
 
 uint8_t spotpass::load(std::string dir)
@@ -57,74 +70,94 @@ uint8_t spotpass::load(std::string dir)
 
 	file_directory = dir;
 
-	if (spotpass_data.is_open()) spotpass_data.close();
+	if (spotpass_data.is_open())
+	{
+		spotpass_data.close();
+	}
 	
 	spotpass_data.open(dir, std::ios::in | std::ios::out | std::ios::binary | std::ios::ate);
 	size_t file_size = spotpass_data.tellg();
 
 	if (file_size != 0xCAFE4)
 	{
-		//LOG_ERROR("load error : the given spotpass file was the incorrect size!");
+		LOG_ERROR("load error : the given spotpass file was the incorrect size!");
 		spotpass_data.close();
 		return -1;
 	}
+
 	if (!spotpass_data.is_open())
 	{
 		LOG_ERROR("load error : could not open \"{}\"", dir);
 		return -1;
 	}
 
-	// delete all old ghost data and clear
-	for (int i = 0; i < ghosts.size(); i++) if (ghosts[i]) delete ghosts[i];
-	ghosts.clear();
-	ghosts.reserve(80);
-	ghost_count = 0;
 
 	bin_read<uint8_t>(&cup_id, spotpass_data, 0x2f);
+	bin_read<uint8_t>(header_data, spotpass_data, (uint32_t)0, 0x64);
+	ghost_count = 0;
 
-	for (int i = 0; i < 80; i++)
-	{
-		// each ghost inside of a spotpass file have a padding size of 0x2898
-		// the maximum amount of ghosts inside of a spotpass file is 80
-		offset = 0x64 + (GHOST_SIZE * i);
-
-		if (verify_magic("DGDC", spotpass_data, sizeof(char) * 4, offset) != 0)
-		{
-			auto* _gdata = ghosts.emplace_back(new ghost());
-			_gdata->file_offset = offset;
-			_gdata->ghost_id = i;
-
-			// 0x04 (7 bits) -> finshed time (minutes)
-			// 0x04.7 (7 bits) -> finshed time (seconds)
-			// 0x05.6 (10 bits) -> finshed time (milliseconds)
-			bin_read<raw_ghost>(
-				&_gdata->serialized, 
-				spotpass_data, 
-				offset
-			);
-
-			offset += 20;
-			bin_read<uint32_t>(&u32buffer, spotpass_data, offset);
-			_gdata->course_id    = (u32buffer >> 0)  & 0x3f; // 7 bit
-			_gdata->character_id = (u32buffer >> 6)  & 0x1f; // 5 bit
-			_gdata->kart_id      = (u32buffer >> 11) & 0x1f; // 5 bit
-			_gdata->tire_id      = (u32buffer >> 16) & 0x0f; // 4 bit
-			_gdata->glider_id    = (u32buffer >> 20) & 0x0f; // 4 bit
-
-			offset += 4;
-			char mii_name[0x14];
-			bin_read<char>(mii_name, spotpass_data, &offset, 0x14);
-			ghosts[ghost_count]->player_name = utf16be(mii_name, 0x14).c_str();
-
-			offset += 4;
-			bin_read<mii>(&ghosts[ghost_count]->mii_data, spotpass_data, &offset);
-			bin_read<uint8_t>(&ghosts[ghost_count]->country_id, spotpass_data, &offset);
-			ghost_count++;
-		}
-	}
+	this->load_course_ghosts(course_1, 0x64);
+	this->load_course_ghosts(course_2, 0x32c44);
+	this->load_course_ghosts(course_3, 0x65824);
+	this->load_course_ghosts(course_4, 0x98404);
 
 	ready = true;
 	return cup_id;
+}
+
+void spotpass::load_course_ghosts(course_ghosts_array_t& ghosts, size_t file_offset)
+{
+	for (int i = 0; i < 20; i++)
+	{
+		// each ghost inside of a spotpass file have a padding size of 0x2898
+		// the maximum amount of ghosts inside of a course is 20
+		uint32_t offset = file_offset + (GHOST_SIZE * i);
+
+		if (verify_magic("DGDC", spotpass_data, sizeof(char) * 4, offset) == false)
+			continue; // invalid ghost header, skip
+
+		auto _ghost = std::make_unique<ghost>();
+
+		_ghost->file_offset = offset;
+		_ghost->ghost_id = i;
+
+		{
+			uint8_t* __ghost_data_buffer = new uint8_t[GHOST_SIZE];
+
+			bin_read<uint8_t>(__ghost_data_buffer, spotpass_data, offset, GHOST_SIZE);
+
+			this->parse_ghost(_ghost, __ghost_data_buffer);
+
+			delete[] __ghost_data_buffer;
+		}
+
+		ghosts[i] = std::move(_ghost);
+		ghost_count++;
+	}
+}
+
+void spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
+{
+	// 0x04 (7 bits) -> finshed time (minutes)
+		// 0x04.7 (7 bits) -> finshed time (seconds)
+		// 0x05.6 (10 bits) -> finshed time (milliseconds)
+	memcpy(&ghost->serialized, data, sizeof(raw_ghost));
+	memcpy(ghost->kdpad_data, data + 0xC0, 0x27D8);
+
+	uint32_t u32buffer = *(uint32_t*)(data + 0x14);
+	ghost->course_id = (u32buffer >> 0) & 0x3f; // 7 bit
+	ghost->character_id = (u32buffer >> 6) & 0x1f; // 5 bit
+	ghost->kart_id = (u32buffer >> 11) & 0x1f; // 5 bit
+	ghost->tire_id = (u32buffer >> 16) & 0x0f; // 4 bit
+	ghost->glider_id = (u32buffer >> 20) & 0x0f; // 4 bit
+
+	char mii_name[0x14];
+	memcpy(mii_name, data + 0x18, 0x14);
+	ghost->player_name = utf16be(mii_name, 0x14).c_str();
+
+	memcpy(&ghost->mii_data, data + 0x30, sizeof(mii));
+
+	ghost->country_id = data[0x7c];
 }
 
 // replaces ghost data at a given offset with new data from replay file
@@ -152,7 +185,7 @@ void spotpass::overwrite_ghost(uint32_t offset, const char* ghost_dir)
 *	mk7 reads ghosts for each courses at specific offsets, so its important not to have ghosts for other courses be moved into another course's data
 *	the passed ghost object is deleted when this is called
 */
-void spotpass::delete_ghost(ghost* _ghost)
+void spotpass::delete_ghost(std::unique_ptr<ghost>& _ghost)
 {
 	uint16_t next_course = round_multiple(_ghost->ghost_id, 20) + 20;
 	uint32_t offset = _ghost->file_offset;
@@ -173,11 +206,10 @@ void spotpass::delete_ghost(ghost* _ghost)
 *	extract a ghost from a spotpass file
 *	also adds crc-32 checksum to end of file
 */
-void spotpass::extract_ghost(ghost* _ghost)
+void spotpass::extract_ghost(std::unique_ptr<ghost>& _ghost)
 {
 	char* file_name = new char[13];
 	char* ghost_buffer = new char[GHOST_SIZE];
-	unsigned int crc32;
 	const char* replay_dir;
 	uint32_t offset = 0;
 
@@ -193,7 +225,7 @@ void spotpass::extract_ghost(ghost* _ghost)
 	}
 	
 	bin_read(ghost_buffer, spotpass_data, _ghost->file_offset, GHOST_SIZE);
-	crc32 = crc32b((unsigned char*)ghost_buffer, GHOST_SIZE);
+	uint32_t crc32 = crc32b((unsigned char*)ghost_buffer, GHOST_SIZE);
 
 	bin_write(ghost_buffer, replay, &offset, GHOST_SIZE);
 	bin_write(&crc32, replay, offset);

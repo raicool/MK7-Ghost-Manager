@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string_view>
+
 #define DRIVER_TEXTURE_COUNT 0x12
 #define BODY_TEXTURE_COUNT 0x11
 #define TIRE_TEXTURE_COUNT 0x0a
