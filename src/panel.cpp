@@ -246,8 +246,7 @@ void panel::draw_ghost_details(std::unique_ptr<ghost>& _ghost)
 	/*
 	*	first person indicator
 	*/
-//	if (_ghost->serialized.gyro_flag)
-	if (0)
+	if (_ghost->serialized.gyro_flag())
 	{
 		ImGui::SameLine(ImGui::GetWindowWidth() - 64);
 		ImGui::Image(g_texture_manager.symbol[0x00], { 32, 32 });
