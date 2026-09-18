@@ -46,7 +46,7 @@ struct mii
 
 	uint16_t padding_0x16;
 
-	// bit 0: sex (0 if male, 1 if female)
+	// bit 0: gender (0 if male, 1 if female)
 	// bit 1-4: birthday month
 	// bit 5-9: birthday day
 	// bit 10-13: favorite color
