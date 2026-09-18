@@ -2,6 +2,7 @@
 
 #include "common/alias.h"
 #include "common/utils.h"
+#include "common/type.h"
 #include "texture.h"
 #include "ghost.h"
 #include "panel.h"
@@ -157,11 +158,14 @@ void panel::render()
 		ImGui::Begin("Cups", 0, ImGuiWindowFlags_NoCollapse);
 		ImGui::Text("%f", ImGui::GetIO().Framerate);
 
+		uint32_t idx = 0;
+		ImGui::BeginTabBar("Loaded Cups", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_Reorderable);
+
 		for (auto& _spdata : g_spotpass_files)
 		{
-			ImGui::BeginTabBar("Loaded Cups", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_Reorderable);
-
 			const std::string _label = std::format("{}{}", _spdata->edited ? "*" : "", cup_name[_spdata->cup_id]);
+
+			ImGui::PushID(idx);
 
 			if (ImGui::BeginTabItem(_label.c_str()))
 			{
@@ -170,9 +174,14 @@ void panel::render()
 
 				ImGui::EndTabItem();
 			}
+			TOOLTIP("%s%s", _spdata->file_directory.c_str(), _spdata->edited ? "\n(Modified)" : "");
 
-			ImGui::EndTabBar();
+			ImGui::PopID();
+			idx++;
 		}
+
+		ImGui::EndTabBar();
+
 
 		if (is_cup_selected)
 		{
