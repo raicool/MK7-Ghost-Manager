@@ -55,16 +55,6 @@ int main()
 	g_texture_manager.current_renderer = g_renderer;
 	g_texture_manager.load_ghost_textures();
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-	httplib::Client cli = httplib::Client("https://api.github.com");
-	auto res = cli.Get("/repos/raicool/mk7-ghost-manager/releases");
-	if (res->status >= 300 || res->status < 200)
-	{
-		LOG_ERROR("failed to fetch github repository releases\n\t(res->status != 202); res->status == {}", res->status);
-	}
-	std::string str = res->body;
-#endif
-
 	double _start_interv = 0;
 	while (1)
 	{
