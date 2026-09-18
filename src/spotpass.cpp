@@ -326,5 +326,27 @@ void spotpass::reload()
 {
 	edited = false;
 
+	// lazy
+
+	for (auto&& ghost : course_1)
+	{
+		ghost.release();
+	}
+
+	for (auto&& ghost : course_2)
+	{
+		ghost.release();
+	}
+
+	for (auto&& ghost : course_3)
+	{
+		ghost.release();
+	}
+
+	for (auto&& ghost : course_4)
+	{
+		ghost.release();
+	}
+
 	load(file_directory);
 }
