@@ -273,7 +273,7 @@ void panel::render()
 							continue;
 						}
 
-						ImGui::PushID(i);
+						ImGui::PushID(current_ghost.get());
 						ImGui::TableNextRow();
 						ImGui::TableSetColumnIndex(0);
 
