@@ -16,3 +16,9 @@
 [submodule "vendor/cpp-httplib"]
 	path = vendor/cpp-httplib
 	url = https://github.com/yhirose/cpp-httplib
+[submodule "vendor/yaml-cpp"]
+	path = vendor/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp
+[submodule "vendor/openssl-cmake"]
+	path = vendor/openssl-cmake
+	url = https://github.com/viaduck/openssl-cmake
