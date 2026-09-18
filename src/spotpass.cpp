@@ -92,12 +92,11 @@ uint8_t spotpass::load(std::string dir)
 
 	bin_read<uint8_t>(&cup_id, spotpass_data, 0x2f);
 	bin_read<uint8_t>(header_data, spotpass_data, (uint32_t)0, 0x64);
-	ghost_count = 0;
 
-	this->load_course_ghosts(course_1, 0x64);
-	this->load_course_ghosts(course_2, 0x32c44);
-	this->load_course_ghosts(course_3, 0x65824);
-	this->load_course_ghosts(course_4, 0x98404);
+	ghost_count[0] = this->load_course_ghosts(course_1, 0x64);
+	ghost_count[1] = this->load_course_ghosts(course_2, 0x32c44);
+	ghost_count[2] = this->load_course_ghosts(course_3, 0x65824);
+	ghost_count[3] = this->load_course_ghosts(course_4, 0x98404);
 
 	spotpass_data.close();
 
@@ -151,8 +150,10 @@ void spotpass::save()
 	delete[] _spotpass_buffer;
 }
 
-void spotpass::load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& ghosts, size_t file_offset)
+uint8_t spotpass::load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& ghosts, size_t file_offset)
 {
+	uint8_t _ghost_count = 0;
+
 	for (int i = 0; i < 20; i++)
 	{
 		// each ghost inside of a spotpass file have a padding size of 0x2898
@@ -178,8 +179,10 @@ void spotpass::load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& ghosts
 		}
 
 		ghosts[i] = std::move(_ghost);
-		ghost_count++;
+		_ghost_count++;
 	}
+
+	return _ghost_count;
 }
 
 void spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
@@ -287,6 +290,7 @@ bool spotpass::add_ghost(uint8_t course_index, const char* ghost_dir)
 			*it = std::make_unique<ghost>();
 			overwrite_ghost(*it, ghost_dir);
 			
+			ghost_count[course_index]++;
 			return true;
 		}
 	}

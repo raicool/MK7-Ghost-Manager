@@ -16,7 +16,7 @@ struct spotpass
 	std::array<std::unique_ptr<ghost>, 20> course_3;
 	std::array<std::unique_ptr<ghost>, 20> course_4;
 
-	uint32_t ghost_count = 0;
+	uint8_t ghost_count[4] = {0, 0, 0, 0};
 	uint8_t cup_id = 0;
 
 	std::array<std::unique_ptr<ghost>, 20>* get_course(uint8_t index);
