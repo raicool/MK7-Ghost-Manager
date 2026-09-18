@@ -144,12 +144,11 @@ void spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
 	memcpy(&ghost->serialized, data, sizeof(raw_ghost));
 	memcpy(ghost->kdpad_data, data + 0xC0, 0x27D8);
 
-	uint32_t u32buffer = *(uint32_t*)(data + 0x14);
-	ghost->course_id = (u32buffer >> 0) & 0x3f; // 7 bit
-	ghost->character_id = (u32buffer >> 6) & 0x1f; // 5 bit
-	ghost->kart_id = (u32buffer >> 11) & 0x1f; // 5 bit
-	ghost->tire_id = (u32buffer >> 16) & 0x0f; // 4 bit
-	ghost->glider_id = (u32buffer >> 20) & 0x0f; // 4 bit
+	ghost->course_id = ghost->serialized.course();
+	ghost->character_id = ghost->serialized.character();
+	ghost->kart_id = ghost->serialized.kart();
+	ghost->tire_id = ghost->serialized.tire();
+	ghost->glider_id = ghost->serialized.wing();
 
 	char mii_name[0x14];
 	memcpy(mii_name, data + 0x18, 0x14);
@@ -157,7 +156,7 @@ void spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
 
 	memcpy(&ghost->mii_data, data + 0x30, sizeof(mii));
 
-	ghost->country_id = data[0x7c];
+	ghost->country_id = ghost->serialized.country();
 }
 
 // replaces ghost data at a given offset with new data from replay file

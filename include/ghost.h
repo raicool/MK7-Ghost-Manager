@@ -66,7 +66,7 @@ struct raw_ghost
 
 	packed_time finished_time;
 	
-	uint8_t data[0x10];
+	uint8_t data[0xb6];
 
 	inline uint8_t kcp() const { return data[0] & 0x07; }
 	inline bool gyro_flag() const { return (data[0] >> 3) & 0x01; }
@@ -118,30 +118,38 @@ struct raw_ghost
 		return (data[9] & 0xff) | (data[10] & 0xff << 8);
 	}
 
-// 	uint8_t lap1_min : 7;
-// 	uint8_t lap1_sec : 7;
-// 	uint16_t lap1_ms : 10;
-// 	uint8_t a : 1;
-// 
-// 	uint8_t lap2_min : 7;
-// 	uint8_t lap2_sec : 7;
-// 	uint16_t lap2_ms : 10;
-// 
-// 	uint8_t lap3_min : 7;
-// 	uint8_t lap3_sec : 7;
-// 	uint8_t padding4 : 1;
-// 	uint16_t lap3_ms : 10;
-// 
-// 	uint32_t padding1 : 22;
-// 	uint8_t course : 6;
-// 	uint8_t character : 5;
-// 	uint8_t kart : 5;
-// 	uint8_t tire : 4;
-// 	uint8_t wing : 4;
+	inline uint8_t course() const
+	{
+		return data[13] & 0x3f;
+	}
 
- 	//char name_utf16be[0x14];
+	inline uint8_t character() const
+	{
+		return (data[13] >> 6) & 0x3 | (data[14] << 2) & 0xf;
+	}
+
+	inline uint8_t kart() const
+	{
+		return (data[14] >> 3) & 0x1f;
+	}
+
+	inline uint8_t tire() const
+	{
+		return data[15] & 0x0f;
+	}
+
+	inline uint8_t wing() const
+	{
+		return (data[15] >> 4) & 0x0f;
+	}
+
+	inline uint16_t country() const
+	{
+		return data[0x89] | (data[0x8a] << 8);
+	}
+
 };
-static_assert(sizeof(raw_ghost) == 0x17, "invalid size of raw_ghost");
+static_assert(sizeof(raw_ghost) == 0xbd, "invalid size of raw_ghost");
 #pragma pack(pop)
 
 struct ghost
@@ -153,11 +161,9 @@ struct ghost
 
 	raw_ghost serialized;
 
-	
 	uint8_t country_id;
 
 	uint8_t course_id;
-
 	uint8_t character_id;
 	uint8_t kart_id;
 	uint8_t tire_id;
