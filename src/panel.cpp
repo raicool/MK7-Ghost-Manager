@@ -14,9 +14,82 @@ extern std::vector<std::shared_ptr<spotpass>> g_spotpass_files;
 extern texture g_texture_manager;
 
 extern ImFont* g_font_rodin;
+extern ImFont* g_font_monospace;
 
 std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf8_conv;
 #define TOOLTIP(x, ...) if (ImGui::IsItemHovered()) ImGui::SetTooltip(x, __VA_ARGS__)
+
+void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint16_t view_width = 16)
+{
+	ImGui::PushFont(g_font_monospace);
+	uint8_t ptr_val = 0;
+	uint32_t offset = 0;
+
+	for (uint16_t i = 0; i < view_length; i++)
+	{
+		ImGui::Text("%04x   ", i * view_length);
+
+		// hex display
+		for (int j = 0; j < view_width; j++)
+		{
+			offset = (view_width * i) + j;
+			if (offset > size)
+			{
+				ptr_val = 0;
+			}
+			else
+			{
+				ptr_val = src[offset];
+			}
+
+			uint32_t col = IM_COL32(255, 255, 255, 255);
+
+			if (ptr_val == 0)
+			{
+				col = IM_COL32(127, 127, 127, 255);
+			}
+
+			ImGui::PushStyleColor(ImGuiCol_Text, col);
+
+			ImGui::SameLine();
+			ImGui::Text("%02x", ptr_val);
+
+			ImGui::PopStyleColor();
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("   ");
+		// ascii display
+		for (int j = 0; j < view_width; j++)
+		{
+			offset = (view_width * i) + j;
+			if (offset > size)
+			{
+				ptr_val = 0;
+			}
+			else
+			{
+				ptr_val = src[offset];
+			}
+
+			uint32_t col = IM_COL32(255, 255, 255, 255);
+
+			if (ptr_val <= 0x20 || ptr_val > 0x7f)
+			{
+				col = IM_COL32(127, 127, 127, 255);
+				ptr_val = '.';
+			}
+
+			ImGui::PushStyleColor(ImGuiCol_Text, col);
+
+			ImGui::SameLine();
+			ImGui::Text("%c", ptr_val);
+
+			ImGui::PopStyleColor();
+		}
+	}
+	ImGui::PopFont();
+}
 
 void panel::render()
 {
