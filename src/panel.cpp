@@ -37,13 +37,20 @@ void panel::render()
 
 //			if (ImGui::MenuItem("Create Empty SpotPass Files")) create_spotpass_folder();
 
-			ImGui::EndMenu();
-		}
+			if (current_cup)
+			{
+				ImGui::Separator();
 
-		if (ImGui::BeginMenu("Windows"))
-		{
-			ImGui::CheckboxFlags("Cups List", &panel_flags, panels::PANEL_CUPS_LIST);
-			ImGui::CheckboxFlags("Ghost List", &panel_flags, panels::PANEL_GHOST_LIST);
+				const char* _file_directory = current_cup->file_directory.c_str();
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.5, 0.5, 1.0));
+				ImGui::Text(_file_directory);
+				ImGui::PopStyleColor();
+
+				if (ImGui::MenuItem("Save")) current_cup->save(false);
+				if (ImGui::MenuItem("Save As")) current_cup->save();
+				if (ImGui::MenuItem("Reload from File")) current_cup->reload();
+			}
+
 			ImGui::EndMenu();
 		}
 

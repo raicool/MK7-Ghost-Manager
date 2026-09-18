@@ -104,7 +104,7 @@ uint8_t spotpass::load(std::string dir)
 	return cup_id;
 }
 
-void spotpass::save()
+void spotpass::save(bool prompt_file)
 {
 	char* _spotpass_buffer = new char[0xcafe4];
 
@@ -136,7 +136,7 @@ void spotpass::save()
 		}
 	}
 
-	auto file = create_file(this->file_directory.c_str(), "All\0*.*\0");
+	auto file = prompt_file ? create_file(nullptr, "All\0*.*\0") : this->file_directory.c_str();
 
 	if (file)
 	{

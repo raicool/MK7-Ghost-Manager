@@ -23,7 +23,7 @@ struct spotpass
 	std::array<std::unique_ptr<ghost>, 20>* get_course(uint8_t index);
 
 	uint8_t load(std::string dir);
-	void save();
+	void save(bool prompt_file = true);
 
 	uint8_t load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& courses, size_t file_offset);
 	void parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data);
