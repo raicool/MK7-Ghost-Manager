@@ -5,6 +5,7 @@
 struct spotpass
 {
 	bool ready = false;
+	bool edited = false;
 
 	std::fstream spotpass_data;
 	std::string file_directory;
@@ -24,14 +25,14 @@ struct spotpass
 	uint8_t load(std::string dir);
 	void save();
 
-	void load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& courses, size_t file_offset);
+	uint8_t load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& courses, size_t file_offset);
 	void parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data);
 	void reload();
 
 	void overwrite_ghost(std::unique_ptr<ghost>& ghost, const char* ghost_dir);
-	void delete_ghost(std::unique_ptr<ghost>& _ghost);
 	void extract_ghost(std::unique_ptr<ghost>& _ghost);
 	bool add_ghost(uint8_t course_index, const char* ghost_dir);
+	void delete_ghost(uint8_t course_index, std::unique_ptr<ghost>& _ghost);
 };
 
 void open_spotpass_file();

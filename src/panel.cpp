@@ -74,9 +74,6 @@ void panel::render()
 
 	if (panel_flags & panels::PANEL_CUPS_LIST)
 	{
-		static char* items[4];
-		static int idx = 0;
-
 		ImGui::Begin("Cups", 0, ImGuiWindowFlags_NoCollapse);
 		ImGui::Text("%f", ImGui::GetIO().Framerate);
 
@@ -84,18 +81,12 @@ void panel::render()
 		{
 			ImGui::BeginTabBar("Loaded Cups", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_Reorderable);
 
-			const uint8_t _cup = _spdata->cup_id;
+			const std::string _label = std::format("{}{}", _spdata->edited ? "*" : "", cup_name[_spdata->cup_id]);
 
-			if (ImGui::BeginTabItem(cup_name[_cup]))
+			if (ImGui::BeginTabItem(_label.c_str()))
 			{
 				is_cup_selected = true;
 				current_cup = _spdata;
-				course_idx = idx;
-
-				items[0] = const_cast<char*>(course_name[cup_courses[_cup][0]]);
-				items[1] = const_cast<char*>(course_name[cup_courses[_cup][1]]);
-				items[2] = const_cast<char*>(course_name[cup_courses[_cup][2]]);
-				items[3] = const_cast<char*>(course_name[cup_courses[_cup][3]]);
 
 				ImGui::EndTabItem();
 			}
@@ -105,16 +96,42 @@ void panel::render()
 
 		if (is_cup_selected)
 		{
-			if (ImGui::ListBox("Courses", &idx, items, 4, 4))
+			for (int i = 0; i < 4; i++)
 			{
-				course_idx = idx;
-			}
+				const uint8_t course_id = cup_courses[current_cup->cup_id][i];
 
-			ImGui::Text(current_cup->file_directory.c_str());
+				ImGui::PushID(i);
+				if (ImGui::Selectable(course_name[course_id], course_idx == i))
+				{
+					course_idx = i;
+				}
+				ImGui::PopID();
+
+				ImGui::SameLine();
+
+				const uint8_t __ghost_count = current_cup->ghost_count[i];
+
+				ImGui::PushStyleColor(ImGuiCol_Text, __ghost_count >= 20 ? ImVec4(1.0, 0.5, 0.5, 1.0) : ImVec4(0.5, 0.5, 0.5, 1.0));
+				ImGui::Text("(%i/20)", __ghost_count);
+				ImGui::PopStyleColor();
+			}			
 
 			if (ImGui::Button("Save"))
 			{
 				current_cup->save();
+			}
+
+			const char* _file_directory = current_cup->file_directory.c_str();
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.5, 0.5, 1.0));
+			ImGui::Text(_file_directory);
+			ImGui::PopStyleColor();
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("Right Click to Copy Path to Clipboard");
+
+				if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+					ImGui::SetClipboardText(_file_directory);
 			}
 
 			ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
@@ -160,59 +177,62 @@ void panel::render()
 		if (current_cup)
 		{
 			ImGui::PushFont(g_font_rodin);
-			ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH);
-
-			std::array<std::unique_ptr<ghost>, 20>* coursedata = current_cup->get_course(course_idx);
-
-			if (coursedata)
+			if (ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH))
 			{
-				for (uint32_t i = 0; i < 20; i++)
+
+				std::array<std::unique_ptr<ghost>, 20>* coursedata = current_cup->get_course(course_idx);
+
+				if (coursedata)
 				{
-					std::unique_ptr<ghost>& current_ghost = coursedata->at(i);
-
-					if (current_ghost == nullptr)
+					for (uint32_t i = 0; i < 20; i++)
 					{
-						continue;
+						std::unique_ptr<ghost>& current_ghost = coursedata->at(i);
+
+						if (current_ghost == nullptr)
+						{
+							continue;
+						}
+
+						ImGui::PushID(i);
+						ImGui::TableNextRow();
+						ImGui::TableSetColumnIndex(0);
+
+						draw_ghost_details(current_ghost);
+
+						if (ImGui::Button("Delete Ghost"))
+						{
+							current_cup->delete_ghost(course_idx, current_ghost);
+						}
+
+						if (ImGui::Button("Overwrite Ghost"))
+						{
+							current_cup->overwrite_ghost(current_ghost, open_file());
+						}
+
+						if (ImGui::Button("Extract Ghost"))
+						{
+							current_cup->extract_ghost(current_ghost);
+						}
+
+						if (ImGui::Button("Export Mii Data (.mii)"))
+						{
+							const uint64_t system_id = current_ghost->mii_data.system_id;
+							auto file = create_file(std::format("{:016x}.mii", system_id).c_str(), "All\0*.*\0Mii (*.mii)\0*.mii\0");
+
+							std::fstream mii_stream(file, std::ios::out | std::ios::binary);
+
+							bin_write<mii>(&current_ghost->mii_data, mii_stream, (uint32_t)0, sizeof(mii));
+
+							mii_stream.close();
+						}
+
+						ImGui::PopID();
 					}
-
-					ImGui::PushID(i);
-					ImGui::TableNextRow();
-					ImGui::TableSetColumnIndex(0);
-
-					draw_ghost_details(current_ghost);
-
-					if (ImGui::Button("Delete Ghost"))
-					{
-						current_cup->delete_ghost(current_ghost);
-					}
-
-					if (ImGui::Button("Overwrite Ghost"))
-					{
-						current_cup->overwrite_ghost(current_ghost, open_file());
-					}
-
-					if (ImGui::Button("Extract Ghost"))
-					{
-						current_cup->extract_ghost(current_ghost);
-					}
-
-					if (ImGui::Button("Export Mii Data (.mii)"))
-					{
-						const uint64_t system_id = current_ghost->mii_data.system_id;
-						auto file = create_file(std::format("{:016x}.mii", system_id).c_str(), "All\0*.*\0Mii (*.mii)\0*.mii\0");
-
-						std::fstream mii_stream(file, std::ios::out | std::ios::binary);
-
-						bin_write<mii>(&current_ghost->mii_data, mii_stream, (uint32_t)0, sizeof(mii));
-
-						mii_stream.close();
-					}
-
-					ImGui::PopID();
 				}
+
+				ImGui::EndTable();
 			}
 
-			ImGui::EndTable();
 			ImGui::PopFont();
 		}
 

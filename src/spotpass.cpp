@@ -148,6 +148,8 @@ void spotpass::save()
 	}
 
 	delete[] _spotpass_buffer;
+
+	edited = false;
 }
 
 uint8_t spotpass::load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& ghosts, size_t file_offset)
@@ -224,11 +226,28 @@ void spotpass::overwrite_ghost(std::unique_ptr<ghost>& ghost, const char* ghost_
 	this->parse_ghost(ghost, ghost_data);
 
 	delete[] ghost_data;
+
+	edited = true;
 }
 
-void spotpass::delete_ghost(std::unique_ptr<ghost>& _ghost)
+void spotpass::delete_ghost(uint8_t course_index, std::unique_ptr<ghost>& _ghost)
 {
+	if (course_index >= 4)
+	{
+		LOG_ERROR("delete_ghost() : invalid course index passed");
+
+#ifndef NDEBUG
+		assert(false);
+#endif
+
+		return;
+	}
+
 	_ghost.release();
+
+	ghost_count[course_index]--;
+
+	edited = true;
 }
 
 /*
@@ -262,6 +281,8 @@ void spotpass::extract_ghost(std::unique_ptr<ghost>& _ghost)
 	replay.close();
 
 	delete[] ghost_buffer;
+
+	edited = true;
 }
 
 /*
@@ -292,6 +313,8 @@ bool spotpass::add_ghost(uint8_t course_index, const char* ghost_dir)
 			
 			ghost_count[course_index]++;
 			return true;
+
+			edited = true;
 		}
 	}
 
@@ -301,5 +324,7 @@ bool spotpass::add_ghost(uint8_t course_index, const char* ghost_dir)
 
 void spotpass::reload()
 {
+	edited = false;
+
 	load(file_directory);
 }
