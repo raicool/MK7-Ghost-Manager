@@ -1,6 +1,9 @@
 #pragma once
 
 #include "mii.h"
+#include "common/utils.h"
+
+#define GHOST_SIZE 0x2898
 
 enum kcp
 {
@@ -66,7 +69,7 @@ struct raw_ghost
 
 	packed_time finished_time;
 	
-	uint8_t data[0xb6];
+	uint8_t data[0xb9];
 
 	inline uint8_t kcp() const { return data[0] & 0x07; }
 	inline bool gyro_flag() const { return (data[0] >> 3) & 0x01; }
@@ -147,9 +150,8 @@ struct raw_ghost
 	{
 		return data[0x89] | (data[0x8a] << 8);
 	}
-
 };
-static_assert(sizeof(raw_ghost) == 0xbd, "invalid size of raw_ghost");
+static_assert(sizeof(raw_ghost) == 0xc0, "invalid size of raw_ghost");
 #pragma pack(pop)
 
 struct ghost
@@ -171,5 +173,19 @@ struct ghost
 
 	mii mii_data;
 
-	uint8_t kdpad_data[0x27D8];
+	uint8_t kdpad_data[0x27d8];
+
+	void cpy_to_buffer(char* ghost_buffer)
+	{
+		// set file header (DGDC)
+		*(uint32_t*)&ghost_buffer[0] = 0x43444744;
+
+		memcpy(ghost_buffer + 0x04, serialized.finished_time.data, sizeof(packed_time));
+		memcpy(ghost_buffer + 0x07, serialized.data, 0xb9);
+		memcpy(ghost_buffer + 0xc0, kdpad_data, 0x27d8);
+
+		uint32_t crc32 = crc32b((unsigned char*)ghost_buffer, GHOST_SIZE);
+
+		*(uint32_t*)&ghost_buffer[GHOST_SIZE] = crc32;
+	}
 };

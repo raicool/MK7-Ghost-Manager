@@ -112,13 +112,18 @@ void panel::render()
 
 			ImGui::Text(current_cup->file_directory.c_str());
 
+			if (ImGui::Button("Save"))
+			{
+				current_cup->save();
+			}
+
 			ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
 
 			if (ImGui::Button("Add Ghost"))
 			{
 				const char* file_path = open_file();
 				//auto path_w16 = utf8_conv.from_bytes(file_path ? file_path : "");
-				if (current_cup->add_ghost(file_path) == false)
+				if (current_cup->add_ghost(course_idx, file_path) == false)
 				{
 					ImGui::PushID("Load Failed");
 					ImGui::OpenPopup("Load Failed");
@@ -157,7 +162,7 @@ void panel::render()
 			ImGui::PushFont(g_font_rodin);
 			ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH);
 
-			course_ghosts_array_t* coursedata = current_cup->get_course(course_idx);
+			std::array<std::unique_ptr<ghost>, 20>* coursedata = current_cup->get_course(course_idx);
 
 			if (coursedata)
 			{
@@ -170,7 +175,6 @@ void panel::render()
 						continue;
 					}
 
-					
 					ImGui::PushID(i);
 					ImGui::TableNextRow();
 					ImGui::TableSetColumnIndex(0);
@@ -184,7 +188,7 @@ void panel::render()
 
 					if (ImGui::Button("Overwrite Ghost"))
 					{
-						current_cup->overwrite_ghost(current_ghost->file_offset, open_file());
+						current_cup->overwrite_ghost(current_ghost, open_file());
 					}
 
 					if (ImGui::Button("Extract Ghost"))

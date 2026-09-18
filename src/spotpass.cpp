@@ -3,8 +3,6 @@
 
 #include "common/common.h"
 
-#define GHOST_SIZE 0x2898
-
 std::vector<std::shared_ptr<spotpass>> g_spotpass_files;
 
 void open_spotpass_file()
@@ -50,7 +48,7 @@ std::vector<std::shared_ptr<spotpass>> get_spotpass_files()
 	return g_spotpass_files;
 }
 
-course_ghosts_array_t* spotpass::get_course(uint8_t index)
+std::array<std::unique_ptr<ghost>, 20>* spotpass::get_course(uint8_t index)
 {
 	
 	switch (index)
@@ -75,10 +73,10 @@ uint8_t spotpass::load(std::string dir)
 		spotpass_data.close();
 	}
 	
-	spotpass_data.open(dir, std::ios::in | std::ios::out | std::ios::binary | std::ios::ate);
+	spotpass_data.open(dir, std::ios::in | std::ios::binary | std::ios::ate);
 	size_t file_size = spotpass_data.tellg();
 
-	if (file_size != 0xCAFE4)
+	if (file_size != 0xcafe4)
 	{
 		LOG_ERROR("load error : the given spotpass file was the incorrect size!");
 		spotpass_data.close();
@@ -101,11 +99,59 @@ uint8_t spotpass::load(std::string dir)
 	this->load_course_ghosts(course_3, 0x65824);
 	this->load_course_ghosts(course_4, 0x98404);
 
+	spotpass_data.close();
+
 	ready = true;
 	return cup_id;
 }
 
-void spotpass::load_course_ghosts(course_ghosts_array_t& ghosts, size_t file_offset)
+void spotpass::save()
+{
+	char* _spotpass_buffer = new char[0xcafe4];
+
+#ifndef NDEBUG
+	// set values of buffer to 0x00 instead of debug placeholder 0xcd
+
+	memset(_spotpass_buffer, 0, 0xcafe4);
+#endif
+
+	memcpy(_spotpass_buffer, this->header_data, 0x64);
+
+	uint8_t _file_ghost_index = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		const std::array<std::unique_ptr<ghost>, 20>* course = this->get_course(i);
+
+		for (auto&& ghost : *course)
+		{	
+			_file_ghost_index++;
+
+			if (ghost == nullptr)
+			{
+				continue;
+			}
+
+			size_t offset = 0x64 + (GHOST_SIZE * (_file_ghost_index - 1));
+
+			ghost->cpy_to_buffer(_spotpass_buffer + offset);
+		}
+	}
+
+	auto file = create_file(this->file_directory.c_str(), "All\0*.*\0");
+
+	if (file)
+	{
+		std::fstream __new_spotpass_stream(file, std::ios::out | std::ios::binary | std::ios::trunc);
+
+		bin_write(_spotpass_buffer, __new_spotpass_stream, 0u, 0xcafe4);
+
+		__new_spotpass_stream.close();
+	}
+
+	delete[] _spotpass_buffer;
+}
+
+void spotpass::load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& ghosts, size_t file_offset)
 {
 	for (int i = 0; i < 20; i++)
 	{
@@ -138,9 +184,6 @@ void spotpass::load_course_ghosts(course_ghosts_array_t& ghosts, size_t file_off
 
 void spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
 {
-	// 0x04 (7 bits) -> finshed time (minutes)
-		// 0x04.7 (7 bits) -> finshed time (seconds)
-		// 0x05.6 (10 bits) -> finshed time (milliseconds)
 	memcpy(&ghost->serialized, data, sizeof(raw_ghost));
 	memcpy(ghost->kdpad_data, data + 0xC0, 0x27D8);
 
@@ -160,45 +203,29 @@ void spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
 }
 
 // replaces ghost data at a given offset with new data from replay file
-void spotpass::overwrite_ghost(uint32_t offset, const char* ghost_dir)
+void spotpass::overwrite_ghost(std::unique_ptr<ghost>& ghost, const char* ghost_dir)
 {
 	std::fstream ghost_file;
 	ghost_file.open(ghost_dir, std::ios::in | std::ios::binary);
 
-	if (!ghost_file.is_open()) return;
-	char* ghost_data = new char(GHOST_SIZE);
-
-	bin_read(ghost_data, ghost_file, 0u, GHOST_SIZE);
-	bin_write(&ghost_data, spotpass_data, offset, GHOST_SIZE);
-
-	ghost_file.close();
-
-	delete ghost_data;
-
-	// reload ghost since its overwritten
-	reload();
-}
-
-/*
-*	deletes ghost data at offset and shifts all lower course ghosts up
-*	mk7 reads ghosts for each courses at specific offsets, so its important not to have ghosts for other courses be moved into another course's data
-*	the passed ghost object is deleted when this is called
-*/
-void spotpass::delete_ghost(std::unique_ptr<ghost>& _ghost)
-{
-	uint16_t next_course = round_multiple(_ghost->ghost_id, 20) + 20;
-	uint32_t offset = _ghost->file_offset;
-	
-	for (uint32_t i = _ghost->ghost_id; i < next_course; i++)
+	if (!ghost_file.is_open())
 	{
-		if (offset + GHOST_SIZE >= ((next_course * GHOST_SIZE) + 0x64)) break;
-
-		bin_move(spotpass_data, offset + GHOST_SIZE, offset, GHOST_SIZE, true);
-		offset += GHOST_SIZE;
+		LOG_ERROR("overwrite_ghost() : could not open ghost file");
+		return;
 	}
 
-	// reload ghost since its overwritten
-	reload();
+	uint8_t* ghost_data = new uint8_t[GHOST_SIZE];
+	bin_read(ghost_data, ghost_file, 0u, GHOST_SIZE);
+	ghost_file.close();
+
+	this->parse_ghost(ghost, ghost_data);
+
+	delete[] ghost_data;
+}
+
+void spotpass::delete_ghost(std::unique_ptr<ghost>& _ghost)
+{
+	_ghost.release();
 }
 
 /*
@@ -208,30 +235,29 @@ void spotpass::delete_ghost(std::unique_ptr<ghost>& _ghost)
 void spotpass::extract_ghost(std::unique_ptr<ghost>& _ghost)
 {
 	char* file_name = new char[13];
-	char* ghost_buffer = new char[GHOST_SIZE];
+	char* ghost_buffer = new char[GHOST_SIZE + 4];
 	const char* replay_dir;
 	uint32_t offset = 0;
 
 	snprintf(file_name, 13, "replay%02i.dat", _ghost->course_id);
 	replay_dir = create_file(file_name);
 
+	delete[] file_name;
+
 	std::fstream replay(replay_dir, std::ios::out | std::ios::binary | std::ios::trunc);
 
 	if (!replay.is_open())
 	{
-		LOG_ERROR("ghost extract error : could not access file {}", replay_dir);
+		LOG_ERROR("extract_ghost() : could not access file {}", replay_dir);
 		return;
 	}
-	
-	bin_read(ghost_buffer, spotpass_data, _ghost->file_offset, GHOST_SIZE);
-	uint32_t crc32 = crc32b((unsigned char*)ghost_buffer, GHOST_SIZE);
 
-	bin_write(ghost_buffer, replay, &offset, GHOST_SIZE);
-	bin_write(&crc32, replay, offset);
+	_ghost->cpy_to_buffer(ghost_buffer);
+
+	bin_write<char>(ghost_buffer, replay, 0u, GHOST_SIZE + 4);
 
 	replay.close();
 
-	delete[] file_name;
 	delete[] ghost_buffer;
 }
 
@@ -239,55 +265,34 @@ void spotpass::extract_ghost(std::unique_ptr<ghost>& _ghost)
 *	adds a ghost to a spotpass file
 *	returns true if there is room for the ghost, false if there is no room
 */
-bool spotpass::add_ghost(const char* ghost_dir)
+bool spotpass::add_ghost(uint8_t course_index, const char* ghost_dir)
 {
-	std::fstream ghost_data(ghost_dir, std::ios::in | std::ios::binary);
+	std::array<std::unique_ptr<ghost>, 20>* course = this->get_course(course_index);
 
-	if (!ghost_data.is_open()) return false;
-
-	uint8_t buffer = 0;
-
-	uint32_t course_id;
-	bin_read<uint32_t>(&course_id, ghost_data, 20);
-	course_id &= 0x3f;
-
-	if (course_id > 0x79) return false;
-
-	uint32_t next_course_offset =  cup_course_index[course_id] * 20       * GHOST_SIZE + 0x64;
-	uint32_t offset             = (cup_course_index[course_id] * 20 - 20) * GHOST_SIZE + 0x64;
-
-	for (uint32_t i = cup_course_index[course_id] * 15;; i++)
+	if (course == nullptr)
 	{
-		if (offset >= next_course_offset)
-		{
-			LOG_ERROR("ghost add error : there is no more room for a new ghost in this course, please delete ghosts to make space!");
-			ghost_data.close();
-			return false;
-		}
+		LOG_ERROR("add_ghost() : invalid course index passed");
 
-		bin_read<uint8_t>(&buffer, spotpass_data, offset);
+#ifndef NDEBUG
+		assert(false);
+#endif
 
-		if (!buffer)
-		{
-			// theres no helper function to copy data from one fstream to another yet, so im doing this manually
-			char* ghost_buffer = new char[GHOST_SIZE];
-			ghost_data.seekg(0);
-			ghost_data.read(reinterpret_cast<char*>(ghost_buffer), GHOST_SIZE);
-			spotpass_data.seekp(offset);
-			spotpass_data.write(reinterpret_cast<const char*>(ghost_buffer), GHOST_SIZE);
-			delete[] ghost_buffer;
-			LOG_INFO("ghost added at 0x{:08x}", offset);
-			break;
-		}
-
-		offset += GHOST_SIZE;
+		return false;
 	}
 
-	ghost_data.close();
+	for (auto&& it = course->begin(); it != course->end(); it++)
+	{
+		if (*it == false)
+		{
+			*it = std::make_unique<ghost>();
+			overwrite_ghost(*it, ghost_dir);
+			
+			return true;
+		}
+	}
 
-	// reload ghost since its overwritten
-	reload();
-	return true;
+	LOG_ERROR("add_ghost() : course has maximum number of ghosts added!");
+	return false;
 }
 
 void spotpass::reload()
