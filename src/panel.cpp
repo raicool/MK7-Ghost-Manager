@@ -135,7 +135,7 @@ void panel::render()
 				ImGui::Separator();
 
 				const char* _file_directory = current_cup->file_directory.c_str();
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.5, 0.5, 1.0));
+				ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
 				ImGui::Text(_file_directory);
 				ImGui::PopStyleColor();
 
@@ -238,6 +238,8 @@ void panel::render()
 
 	if (panel_flags & panels::PANEL_CUPS_LIST)
 	{
+		ImGui::ShowDemoWindow();
+
 		ImGui::Begin("Cups", 0, ImGuiWindowFlags_NoCollapse);
 		ImGui::Text("%f", ImGui::GetIO().Framerate);
 
@@ -350,7 +352,6 @@ void panel::render()
 		*/
 		if (current_cup)
 		{
-			ImGui::PushFont(g_font_rodin);
 			if (ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH))
 			{
 
@@ -410,8 +411,6 @@ void panel::render()
 
 				ImGui::EndTable();
 			}
-
-			ImGui::PopFont();
 		}
 
 		ImGui::End();
@@ -439,8 +438,10 @@ void panel::draw_ghost_details(std::unique_ptr<ghost>& _ghost)
 	}
 
 	ImGui::SameLine();
+	ImGui::PushFont(g_font_rodin);
 	ImGui::Text("%s", utf8_conv.to_bytes(_ghost->player_name).c_str());
-	
+	ImGui::PopFont();
+
 	/*
 	*	display ghost kart config
 	*/
