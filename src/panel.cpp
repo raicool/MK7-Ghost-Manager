@@ -247,9 +247,10 @@ void panel::render()
 		for (auto& _spdata : g_spotpass_files)
 		{
 			const std::string _label = std::format("{}{}", _spdata->edited ? "*" : "", cup_name[_spdata->cup_id]);
+			const uint32_t _label_color = _spdata->edited ? IM_COL32(250, 110, 90, 178) : IM_COL32(46, 89, 148, 178);
 
 			ImGui::PushID(idx);
-
+			ImGui::PushStyleColor(ImGuiCol_Tab, _label_color);
 			if (ImGui::BeginTabItem(_label.c_str()))
 			{
 				is_cup_selected = true;
@@ -257,6 +258,7 @@ void panel::render()
 
 				ImGui::EndTabItem();
 			}
+			ImGui::PopStyleColor();
 			TOOLTIP("%s%s", _spdata->file_directory.c_str(), _spdata->edited ? "\n(Modified)" : "");
 
 			ImGui::PopID();
