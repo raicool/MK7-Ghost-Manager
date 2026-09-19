@@ -139,9 +139,73 @@ void panel::render()
 				ImGui::Text(_file_directory);
 				ImGui::PopStyleColor();
 
+				if (ImGui::MenuItem("Close"))
+				{
+					auto it = std::find(g_spotpass_files.begin(), g_spotpass_files.end(), current_cup);
+					if (it != g_spotpass_files.end())
+					{
+						g_spotpass_files.erase(it);
+					}
+					current_cup = nullptr;
+					is_cup_selected = false;
+				}
+				TOOLTIP("Closes spotpass file\nSave before closing!");
+
 				if (ImGui::MenuItem("Save")) current_cup->save(false);
 				if (ImGui::MenuItem("Save As")) current_cup->save();
 				if (ImGui::MenuItem("Reload from File")) current_cup->reload();
+			}
+
+			const size_t _file_count = g_spotpass_files.size();
+			if (_file_count > 0)
+			{
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Save All"))
+				{
+					for (auto& file : g_spotpass_files)
+					{
+						file->save();
+					}
+				}
+				TOOLTIP("Save all loaded spotpass files");
+
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
+				ImGui::Text(" %i file(s)", _file_count);
+				ImGui::PopStyleColor();
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Save All Miis"))
+				{
+					const char* directory = open_folder();
+					auto directory_utf16 = utf8_conv.from_bytes(directory);
+
+					if (directory)
+					{
+						for (auto& file : g_spotpass_files)
+						{
+							for (auto& ghosts : file->course_1)
+							{
+								if (ghosts)
+								{
+									const uint64_t system_id = ghosts->mii_data.system_id;
+
+									wchar_t format[512];
+									swprintf(format, L"%s/%016llx (%s).cfsd", (char*)directory_utf16.c_str(), system_id, (char*)ghosts->player_name.c_str());
+
+									std::fstream mii_stream(format, std::ios::out | std::ios::binary);
+
+									bin_write<mii>(&ghosts->mii_data, mii_stream, 0u, sizeof(mii));
+
+									mii_stream.close();
+								}
+							}
+						}
+					}
+				}
+				TOOLTIP("Saves miis from all ghosts within loaded spotpass files");
 			}
 
 			ImGui::EndMenu();
