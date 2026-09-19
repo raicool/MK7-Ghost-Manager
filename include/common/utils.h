@@ -45,6 +45,7 @@ static std::fstream open_file_s(std::ios_base::openmode mode)
 static const char* open_file()
 {
 #ifdef WIN32
+	IFileOpenDialog* dialog = nullptr;
 	OPENFILENAMEA f{ 0 };
 	f.lStructSize  = sizeof(f);
 	f.lpstrFile    = dir_buf;         //< file name
@@ -67,7 +68,7 @@ static const char* open_folder()
 	bi.pidlRoot       = NULL;
 	bi.pszDisplayName = dir_buf; // Address of a buffer to receive the display name of the folder selected by the user
 	bi.lpszTitle      = "Select a folder with spotpass files."; // Title of the dialog
-	bi.ulFlags        = BIF_USENEWUI;
+	bi.ulFlags        = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
 	bi.lpfn           = NULL;
 	bi.lParam         = 0;
 	bi.iImage         = -1;
@@ -101,8 +102,16 @@ static const char* create_file(const char* name = nullptr, const char* filter = 
 	f.lpstrFilter    = filter;
 	f.nFilterIndex   = 1;
 	f.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
-	GetSaveFileNameA(&f) ? LOG_INFO("file \"{}\" created", dir_buf) : void();
-	return dir_buf;
+	bool created = GetSaveFileNameA(&f);
+	if (created)
+	{
+		LOG_INFO("file \"{}\" created", dir_buf);
+		return dir_buf;
+	}
+	else
+	{
+		return nullptr;
+	}
 #endif
 #ifdef __LINUX__
 	return osdialog_file(OSDIALOG_SAVE, ".", NULL, NULL);
