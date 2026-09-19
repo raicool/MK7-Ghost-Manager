@@ -22,20 +22,37 @@ std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf8_conv;
 
 void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint16_t view_width = 16)
 {
+	ImGui::BeginTable("Hex Viewer", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
+	ImGui::TableSetupScrollFreeze(1, 0);
+	ImGui::TableSetupColumn("Offset", 0, 64);
+	ImGui::TableSetupColumn("Data");
+	ImGui::TableSetupColumn("Ascii");
+	ImGui::TableHeadersRow();
+
 	ImGui::PushFont(g_font_monospace);
 	uint8_t ptr_val = 0;
 	uint32_t offset = 0;
+	bool end = false;
 
 	for (uint16_t i = 0; i < view_length; i++)
 	{
-		ImGui::Text("%04x   ", i * view_length);
+		if (end) break;
+
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(0);
+
+		ImGui::Text("%04x", i * view_length);
+
+		ImGui::TableSetColumnIndex(1);
 
 		// hex display
 		for (int j = 0; j < view_width; j++)
 		{
+
 			offset = (view_width * i) + j;
 			if (offset > size)
 			{
+				end = true;
 				ptr_val = 0;
 			}
 			else
@@ -58,14 +75,15 @@ void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint1
 			ImGui::PopStyleColor();
 		}
 
-		ImGui::SameLine();
-		ImGui::Text("   ");
+		ImGui::TableSetColumnIndex(2);
+
 		// ascii display
 		for (int j = 0; j < view_width; j++)
 		{
 			offset = (view_width * i) + j;
 			if (offset > size)
 			{
+				end = true;
 				ptr_val = 0;
 			}
 			else
@@ -90,6 +108,7 @@ void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint1
 		}
 	}
 	ImGui::PopFont();
+	ImGui::EndTable();
 }
 
 void panel::render()
