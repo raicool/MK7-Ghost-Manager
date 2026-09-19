@@ -146,7 +146,6 @@ void __async_job_fetch_texture()
 			[&](const char* data, size_t data_length)
 			{
 				__dummy_stream.write(data, data_length);
-				LOG_TRACE("data_length: {}", data_length);
 				return true;
 			}
 		);
@@ -194,5 +193,4 @@ void* texture::request_mii_texture(mii* mii_raw_data)
 #else
 	return nullptr;
 #endif
-
 }

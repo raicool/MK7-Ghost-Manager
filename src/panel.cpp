@@ -117,102 +117,99 @@ void panel::render()
 	static int h;
 	SDL_GetWindowSize(g_window, &w, &h);
 
-	if (panel_flags & panels::PANEL_MENU_BAR)
+	if (ImGui::BeginMainMenuBar());
+	if (ImGui::BeginMenu("File"))
 	{
-		if (ImGui::BeginMainMenuBar());
-		if (ImGui::BeginMenu("File"))
-		{
-			if (ImGui::MenuItem("Open SpotPass Save Folder")) open_spotpass_folder();
-			if (ImGui::MenuItem("Open SpotPass Save File")) open_spotpass_file();
+		if (ImGui::MenuItem("Open SpotPass Save Folder")) open_spotpass_folder();
+		if (ImGui::MenuItem("Open SpotPass Save File")) open_spotpass_file();
 //			if (ImGui::MenuItem("Connect to 3DS debugger")) connect_3ds();
 
 //			ImGui::Separator();
 
 //			if (ImGui::MenuItem("Create Empty SpotPass Files")) create_spotpass_folder();
 
-			if (current_cup)
+		if (current_cup)
+		{
+			ImGui::Separator();
+
+			const char* _file_directory = current_cup->file_directory.c_str();
+			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
+			ImGui::Text(_file_directory);
+			ImGui::PopStyleColor();
+
+			if (ImGui::MenuItem("Close"))
 			{
-				ImGui::Separator();
-
-				const char* _file_directory = current_cup->file_directory.c_str();
-				ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
-				ImGui::Text(_file_directory);
-				ImGui::PopStyleColor();
-
-				if (ImGui::MenuItem("Close"))
+				auto it = std::find(g_spotpass_files.begin(), g_spotpass_files.end(), current_cup);
+				if (it != g_spotpass_files.end())
 				{
-					auto it = std::find(g_spotpass_files.begin(), g_spotpass_files.end(), current_cup);
-					if (it != g_spotpass_files.end())
-					{
-						g_spotpass_files.erase(it);
-					}
-					current_cup = nullptr;
-					is_cup_selected = false;
+					g_spotpass_files.erase(it);
 				}
-				TOOLTIP("Closes spotpass file\nSave before closing!");
-
-				if (ImGui::MenuItem("Save")) current_cup->save(false);
-				if (ImGui::MenuItem("Save As")) current_cup->save();
-				if (ImGui::MenuItem("Reload from File")) current_cup->reload();
+				current_cup = nullptr;
+				is_cup_selected = false;
 			}
+			TOOLTIP("Closes spotpass file\nSave before closing!");
 
-			const size_t _file_count = g_spotpass_files.size();
-			if (_file_count > 0)
+			if (ImGui::MenuItem("Save")) current_cup->save(false);
+			if (ImGui::MenuItem("Save As")) current_cup->save();
+			if (ImGui::MenuItem("Reload from File")) current_cup->reload();
+		}
+
+		const size_t _file_count = g_spotpass_files.size();
+		if (_file_count > 0)
+		{
+			ImGui::Separator();
+
+			if (ImGui::MenuItem("Save All"))
 			{
-				ImGui::Separator();
+				for (auto& file : g_spotpass_files)
+				{
+					file->save();
+				}
+			}
+			TOOLTIP("Save all loaded spotpass files");
 
-				if (ImGui::MenuItem("Save All"))
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
+			ImGui::Text(" %i file(s)", _file_count);
+			ImGui::PopStyleColor();
+
+			ImGui::Separator();
+
+			if (ImGui::MenuItem("Save All Miis"))
+			{
+				const char* directory = open_folder();
+				auto directory_utf16 = utf8_conv.from_bytes(directory);
+
+				if (directory)
 				{
 					for (auto& file : g_spotpass_files)
 					{
-						file->save();
-					}
-				}
-				TOOLTIP("Save all loaded spotpass files");
-
-				ImGui::SameLine();
-				ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
-				ImGui::Text(" %i file(s)", _file_count);
-				ImGui::PopStyleColor();
-
-				ImGui::Separator();
-
-				if (ImGui::MenuItem("Save All Miis"))
-				{
-					const char* directory = open_folder();
-					auto directory_utf16 = utf8_conv.from_bytes(directory);
-
-					if (directory)
-					{
-						for (auto& file : g_spotpass_files)
+						for (auto& ghosts : file->course_1)
 						{
-							for (auto& ghosts : file->course_1)
+							if (ghosts)
 							{
-								if (ghosts)
-								{
-									const uint64_t system_id = ghosts->mii_data.system_id;
+								const uint64_t system_id = ghosts->mii_data.system_id;
 
-									wchar_t format[512];
-									swprintf(format, L"%s/%016llx (%s).cfsd", (char*)directory_utf16.c_str(), system_id, (char*)ghosts->player_name.c_str());
+								wchar_t format[512];
+								swprintf(format, L"%s/%016llx (%s).cfsd", (char*)directory_utf16.c_str(), system_id, (char*)ghosts->player_name.c_str());
 
-									std::fstream mii_stream(format, std::ios::out | std::ios::binary);
+								std::fstream mii_stream(format, std::ios::out | std::ios::binary);
 
-									bin_write<mii>(&ghosts->mii_data, mii_stream, 0u, sizeof(mii));
+								bin_write<mii>(&ghosts->mii_data, mii_stream, 0u, sizeof(mii));
 
-									mii_stream.close();
-								}
+								mii_stream.close();
 							}
 						}
 					}
 				}
-				TOOLTIP("Saves miis from all ghosts within loaded spotpass files");
 			}
-
-			ImGui::EndMenu();
+			TOOLTIP("Saves miis from all ghosts within loaded spotpass files");
 		}
 
-		ImGui::EndMainMenuBar();
+		ImGui::EndMenu();
 	}
+
+	ImGui::EndMainMenuBar();
 
 	ImGuiID dockspace_id = ImGui::GetID("Dockspace");
 	static bool init = true;
@@ -236,185 +233,176 @@ void panel::render()
 
 	ImGui::DockSpaceOverViewport(dockspace_id, ImGui::GetMainViewport());
 
-	if (panel_flags & panels::PANEL_CUPS_LIST)
+	ImGui::Begin("Cups", 0, ImGuiWindowFlags_NoCollapse);
+	ImGui::Text("%.03f Fps", ImGui::GetIO().Framerate);
+
+	uint32_t idx = 0;
+	ImGui::BeginTabBar("Loaded Cups", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_Reorderable);
+
+	for (auto& _spdata : g_spotpass_files)
 	{
-		ImGui::ShowDemoWindow();
+		const std::string _label = std::format("{}{}", _spdata->edited ? "*" : "", cup_name[_spdata->cup_id]);
+		const uint32_t _label_color = _spdata->edited ? IM_COL32(250, 110, 90, 178) : IM_COL32(46, 89, 148, 178);
+		const uint32_t _label_active_color = _spdata->edited ? IM_COL32(250, 110, 90, 255) : IM_COL32(46, 89, 148, 255);
 
-		ImGui::Begin("Cups", 0, ImGuiWindowFlags_NoCollapse);
-		ImGui::Text("%f", ImGui::GetIO().Framerate);
-
-		uint32_t idx = 0;
-		ImGui::BeginTabBar("Loaded Cups", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_Reorderable);
-
-		for (auto& _spdata : g_spotpass_files)
+		ImGui::PushID(idx);
+		ImGui::PushStyleColor(ImGuiCol_Tab, _label_color);
+		ImGui::PushStyleColor(ImGuiCol_TabActive, _label_active_color);
+		if (ImGui::BeginTabItem(_label.c_str()))
 		{
-			const std::string _label = std::format("{}{}", _spdata->edited ? "*" : "", cup_name[_spdata->cup_id]);
-			const uint32_t _label_color = _spdata->edited ? IM_COL32(250, 110, 90, 178) : IM_COL32(46, 89, 148, 178);
+			is_cup_selected = true;
+			current_cup = _spdata;
 
-			ImGui::PushID(idx);
-			ImGui::PushStyleColor(ImGuiCol_Tab, _label_color);
-			if (ImGui::BeginTabItem(_label.c_str()))
+			ImGui::EndTabItem();
+		}
+		ImGui::PopStyleColor(2);
+		TOOLTIP("%s%s", _spdata->file_directory.c_str(), _spdata->edited ? "\n(Modified)" : "");
+
+		ImGui::PopID();
+		idx++;
+	}
+
+	ImGui::EndTabBar();
+
+	if (is_cup_selected)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			const uint8_t course_id = cup_courses[current_cup->cup_id][i];
+
+			ImGui::PushID(i);
+			if (ImGui::Selectable(course_name[course_id], course_idx == i))
 			{
-				is_cup_selected = true;
-				current_cup = _spdata;
-
-				ImGui::EndTabItem();
+				course_idx = i;
 			}
-			ImGui::PopStyleColor();
-			TOOLTIP("%s%s", _spdata->file_directory.c_str(), _spdata->edited ? "\n(Modified)" : "");
-
 			ImGui::PopID();
-			idx++;
+
+			ImGui::SameLine();
+
+			const uint8_t __ghost_count = current_cup->ghost_count[i];
+
+			ImGui::PushStyleColor(ImGuiCol_Text, __ghost_count >= 20 ? ImVec4(1.0, 0.5, 0.5, 1.0) : ImVec4(0.5, 0.5, 0.5, 1.0));
+			ImGui::Text("(%i/20)", __ghost_count);
+			ImGui::PopStyleColor();
+		}			
+
+		if (ImGui::Button("Save"))
+		{
+			current_cup->save();
 		}
 
-		ImGui::EndTabBar();
+		const char* _file_directory = current_cup->file_directory.c_str();
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.5, 0.5, 1.0));
+		ImGui::Text(_file_directory);
+		ImGui::PopStyleColor();
 
-
-		if (is_cup_selected)
+		if (ImGui::IsItemHovered())
 		{
-			for (int i = 0; i < 4; i++)
-			{
-				const uint8_t course_id = cup_courses[current_cup->cup_id][i];
+			ImGui::SetTooltip("Right Click to Copy Path to Clipboard");
 
-				ImGui::PushID(i);
-				if (ImGui::Selectable(course_name[course_id], course_idx == i))
-				{
-					course_idx = i;
-				}
-				ImGui::PopID();
-
-				ImGui::SameLine();
-
-				const uint8_t __ghost_count = current_cup->ghost_count[i];
-
-				ImGui::PushStyleColor(ImGuiCol_Text, __ghost_count >= 20 ? ImVec4(1.0, 0.5, 0.5, 1.0) : ImVec4(0.5, 0.5, 0.5, 1.0));
-				ImGui::Text("(%i/20)", __ghost_count);
-				ImGui::PopStyleColor();
-			}			
-
-			if (ImGui::Button("Save"))
-			{
-				current_cup->save();
-			}
-
-			const char* _file_directory = current_cup->file_directory.c_str();
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5, 0.5, 0.5, 1.0));
-			ImGui::Text(_file_directory);
-			ImGui::PopStyleColor();
-
-			if (ImGui::IsItemHovered())
-			{
-				ImGui::SetTooltip("Right Click to Copy Path to Clipboard");
-
-				if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
-					ImGui::SetClipboardText(_file_directory);
-			}
-
-			ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
-
-			if (ImGui::Button("Add Ghost"))
-			{
-				const char* file_path = open_file();
-				//auto path_w16 = utf8_conv.from_bytes(file_path ? file_path : "");
-				if (current_cup->add_ghost(course_idx, file_path) == false)
-				{
-					ImGui::PushID("Load Failed");
-					ImGui::OpenPopup("Load Failed");
-					ImGui::PopID();
-					ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-					ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-				}
-			}
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+				ImGui::SetClipboardText(_file_directory);
 		}
 
 		ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
-		ImGui::Checkbox("Display Flags", &display_flags);
 
-		ImGui::PushID("Load Failed");
-		if (ImGui::BeginPopupModal("Load Failed", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		if (ImGui::Button("Add Ghost"))
 		{
-			ImGui::Text("Failed to add ghost. see console for more details.");
-			if (ImGui::Button("OK")) { ImGui::CloseCurrentPopup(); }
-
-			ImGui::EndPopup();
-		}
-		ImGui::PopID();
-
-		ImGui::End();
-	}
-
-	if (panel_flags & panels::PANEL_GHOST_LIST)
-	{
-		ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoCollapse);
-
-		/*
-		*	Cup ghosts will be rendered here
-		*/
-		if (current_cup)
-		{
-			if (ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH))
+			const char* file_path = open_file();
+			//auto path_w16 = utf8_conv.from_bytes(file_path ? file_path : "");
+			if (current_cup->add_ghost(course_idx, file_path) == false)
 			{
-
-				std::array<std::unique_ptr<ghost>, 20>* coursedata = current_cup->get_course(course_idx);
-
-				if (coursedata)
-				{
-					for (uint32_t i = 0; i < 20; i++)
-					{
-						std::unique_ptr<ghost>& current_ghost = coursedata->at(i);
-
-						if (current_ghost == nullptr)
-						{
-							continue;
-						}
-
-						ImGui::PushID(current_ghost.get());
-						ImGui::TableNextRow();
-						ImGui::TableSetColumnIndex(0);
-
-						draw_ghost_details(current_ghost);
-
-						if (ImGui::Button("Delete Ghost"))
-						{
-							current_cup->delete_ghost(course_idx, current_ghost);
-						}
-
-						if (ImGui::Button("Overwrite Ghost"))
-						{
-							current_cup->overwrite_ghost(current_ghost, open_file());
-						}
-
-						if (ImGui::Button("Extract Ghost"))
-						{
-							current_cup->extract_ghost(current_ghost);
-						}
-
-						if (ImGui::Button("Export Mii Data (.cfsd)"))
-						{
-							const uint64_t system_id = current_ghost->mii_data.system_id;
-
-							auto file = create_file(std::format("{:016x}.cfsd", system_id).c_str(), "CTR Face Store Data (*.cfsd)\0*.cfsd\0All\0*.*\0");
-
-							if (file)
-							{
-								std::fstream mii_stream(file, std::ios::out | std::ios::binary);
-
-								bin_write<mii>(&current_ghost->mii_data, mii_stream, (uint32_t)0, sizeof(mii));
-
-								mii_stream.close();
-							}
-						}
-
-						ImGui::PopID();
-					}
-				}
-
-				ImGui::EndTable();
+				ImGui::PushID("Load Failed");
+				ImGui::OpenPopup("Load Failed");
+				ImGui::PopID();
+				ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 			}
 		}
-
-		ImGui::End();
 	}
+
+	ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
+	ImGui::Checkbox("Display Flags", &display_flags);
+
+	ImGui::PushID("Load Failed");
+	if (ImGui::BeginPopupModal("Load Failed", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Failed to add ghost. see console for more details.");
+		if (ImGui::Button("OK")) { ImGui::CloseCurrentPopup(); }
+
+		ImGui::EndPopup();
+	}
+	ImGui::PopID();
+	ImGui::End();
+
+
+	ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoCollapse);
+	/*
+	*	Cup ghosts will be rendered here
+	*/
+	if (current_cup)
+	{
+		if (ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH))
+		{
+
+			std::array<std::unique_ptr<ghost>, 20>* coursedata = current_cup->get_course(course_idx);
+
+			if (coursedata)
+			{
+				for (uint32_t i = 0; i < 20; i++)
+				{
+					std::unique_ptr<ghost>& current_ghost = coursedata->at(i);
+
+					if (current_ghost == nullptr)
+					{
+						continue;
+					}
+
+					ImGui::PushID(current_ghost.get());
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
+
+					draw_ghost_details(current_ghost);
+
+					if (ImGui::Button("Delete Ghost"))
+					{
+						current_cup->delete_ghost(course_idx, current_ghost);
+					}
+
+					if (ImGui::Button("Overwrite Ghost"))
+					{
+						current_cup->overwrite_ghost(current_ghost, open_file());
+					}
+
+					if (ImGui::Button("Extract Ghost"))
+					{
+						current_cup->extract_ghost(current_ghost);
+					}
+
+					if (ImGui::Button("Export Mii Data (.cfsd)"))
+					{
+						const uint64_t system_id = current_ghost->mii_data.system_id;
+
+						auto file = create_file(std::format("{:016x}.cfsd", system_id).c_str(), "CTR Face Store Data (*.cfsd)\0*.cfsd\0All\0*.*\0");
+
+						if (file)
+						{
+							std::fstream mii_stream(file, std::ios::out | std::ios::binary);
+
+							bin_write<mii>(&current_ghost->mii_data, mii_stream, (uint32_t)0, sizeof(mii));
+
+							mii_stream.close();
+						}
+					}
+
+					ImGui::PopID();
+				}
+			}
+
+			ImGui::EndTable();
+		}
+	}
+	ImGui::End();
 }
 
 void panel::draw_ghost_details(std::unique_ptr<ghost>& _ghost)

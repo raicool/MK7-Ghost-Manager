@@ -23,7 +23,11 @@ struct logger
 }; 
 
 #define LOG_TRACE(...) logger::debuglogger->trace(__VA_ARGS__)
+#ifndef NDEBUG
 #define LOG_DEBUG(...) logger::debuglogger->debug(__VA_ARGS__)
+#else
+#define LOG_DEBUG(...) void();
+#endif
 #define LOG_INFO(...)  logger::debuglogger->info(__VA_ARGS__)
 #define LOG_WARN(...)  logger::debuglogger->warn(__VA_ARGS__)
 #define LOG_ERROR(...) logger::debuglogger->error(__VA_ARGS__)

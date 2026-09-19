@@ -7,7 +7,7 @@
 #include "panel.h"
 
 #define NANOSECONDS 1000000000
-#define FRAMETIME (NANOSECONDS / 240)
+#define FRAMETIME (NANOSECONDS / 60)
 #define SDL_CONVERT_PERFORMANCE_TIME \
 	(SDL_GetPerformanceCounter() / SDL_GetPerformanceFrequency()) *	NANOSECONDS
 
@@ -26,8 +26,23 @@ int main()
 	SDL_Event __sdl_event;
 	panel __imgui_panel;
 
+	logger::init_logger();
+	LOG_INFO("\n"
+		"------------------------------------------------------------------------------------\n"
+		" MK7 Spotpass Ghost Manager\n"
+		" Version: {}\n"
+		" Commit: {}\n"
+		" Build Type: {}\n"
+		"------------------------------------------------------------------------------------",
+		VERSION,
+		GIT_COMMIT_HASH,
+		DEBUG ? "DEBUG" : "RELEASE"
+	);
+
 	g_window = SDL_CreateWindow(std::format("MK7 Spotpass Ghost Manager v{} ({})", VERSION, GIT_COMMIT_HASH).c_str(), 848, 480, SDL_WINDOW_RESIZABLE);
 	g_renderer = SDL_CreateRenderer(g_window, NULL);
+
+	SDL_SetRenderVSync(g_renderer, SDL_RENDERER_VSYNC_ADAPTIVE);
 
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
@@ -49,8 +64,6 @@ int main()
 	g_font_monospace = io.Fonts->AddFontDefault();
 
 	io.Fonts->Build();
-
-	logger::init_logger();
 
 	g_texture_manager.current_renderer = g_renderer;
 	g_texture_manager.load_ghost_textures();

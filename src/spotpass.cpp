@@ -187,8 +187,14 @@ uint8_t spotpass::load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& gho
 	return _ghost_count;
 }
 
-void spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
+bool spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
 {
+	if (((uint32_t*)data)[0] != 0x43444744)
+	{
+		LOG_ERROR("parse_ghost() : invalid CDGD header magic");
+		return false;
+	}
+
 	memcpy(&ghost->serialized, data, sizeof(raw_ghost));
 	memcpy(ghost->kdpad_data, data + 0xC0, 0x27D8);
 
@@ -205,10 +211,11 @@ void spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
 	memcpy(&ghost->mii_data, data + 0x30, sizeof(mii));
 
 	ghost->country_id = ghost->serialized.country();
+	return true;
 }
 
 // replaces ghost data at a given offset with new data from replay file
-void spotpass::overwrite_ghost(std::unique_ptr<ghost>& ghost, const char* ghost_dir)
+bool spotpass::overwrite_ghost(std::unique_ptr<ghost>& ghost, const char* ghost_dir)
 {
 	std::fstream ghost_file;
 	ghost_file.open(ghost_dir, std::ios::in | std::ios::binary);
@@ -216,18 +223,24 @@ void spotpass::overwrite_ghost(std::unique_ptr<ghost>& ghost, const char* ghost_
 	if (!ghost_file.is_open())
 	{
 		LOG_ERROR("overwrite_ghost() : could not open ghost file");
-		return;
+		return false;
 	}
 
 	uint8_t* ghost_data = new uint8_t[GHOST_SIZE];
 	bin_read(ghost_data, ghost_file, 0u, GHOST_SIZE);
 	ghost_file.close();
 
-	this->parse_ghost(ghost, ghost_data);
-
-	delete[] ghost_data;
-
-	edited = true;
+	if (this->parse_ghost(ghost, ghost_data) == false)
+	{
+		delete[] ghost_data;
+		return false;
+	}
+	else
+	{
+		delete[] ghost_data;
+		edited = true;
+		return true;
+	}
 }
 
 void spotpass::delete_ghost(uint8_t course_index, std::unique_ptr<ghost>& _ghost)
@@ -309,7 +322,11 @@ bool spotpass::add_ghost(uint8_t course_index, const char* ghost_dir)
 		if (*it == false)
 		{
 			*it = std::make_unique<ghost>();
-			overwrite_ghost(*it, ghost_dir);
+			if (overwrite_ghost(*it, ghost_dir) == false)
+			{
+				LOG_ERROR("add_ghost() : error occured while trying to overwrite ghost data");
+				return false;
+			}
 			
 			ghost_count[course_index]++;
 			return true;

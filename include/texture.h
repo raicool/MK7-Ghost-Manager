@@ -22,6 +22,7 @@ struct async_texture
 	SDL_Texture* data;
 };
 
+
 struct texture
 {
 	void* driver[DRIVER_TEXTURE_COUNT];

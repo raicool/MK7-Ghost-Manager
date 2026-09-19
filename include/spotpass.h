@@ -26,10 +26,10 @@ struct spotpass
 	void save(bool prompt_file = true);
 
 	uint8_t load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& courses, size_t file_offset);
-	void parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data);
+	bool parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data);
 	void reload();
 
-	void overwrite_ghost(std::unique_ptr<ghost>& ghost, const char* ghost_dir);
+	bool overwrite_ghost(std::unique_ptr<ghost>& ghost, const char* ghost_dir);
 	void extract_ghost(std::unique_ptr<ghost>& _ghost);
 	bool add_ghost(uint8_t course_index, const char* ghost_dir);
 	void delete_ghost(uint8_t course_index, std::unique_ptr<ghost>& _ghost);
