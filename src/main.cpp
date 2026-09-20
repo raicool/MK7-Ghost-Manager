@@ -13,6 +13,9 @@ SDL_Window* g_window = nullptr;
 SDL_Renderer* g_renderer = nullptr;
 TextureManager g_texture_manager;
 
+// functions to be called at the end of a frame
+std::vector<std::function<void()>> g_funcqueue;
+
 ImFont* g_font_default = nullptr;
 ImFont* g_font_rodin = nullptr;
 ImFont* g_font_monospace = nullptr;
@@ -96,6 +99,16 @@ int main()
 		ImGui::NewFrame();
 
 		__imgui_panel.render();
+
+		if (g_funcqueue.empty() == false)
+		{
+			for (auto it = g_funcqueue.begin(); it != g_funcqueue.end(); it++)
+			{
+				auto& func = *it;
+				func();
+			}
+			g_funcqueue.clear();
+		}
 
 		ImGui::Render();
 		ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), g_renderer);

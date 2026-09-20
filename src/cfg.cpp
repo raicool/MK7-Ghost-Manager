@@ -13,6 +13,7 @@ namespace Config
 	std::unordered_map<std::string, YAML::Node> g_configmap =
 	{
 		{ "framerate", YAML::Node{ 60.0f } },
+		{ "display_flags", YAML::Node{ true } },
 		{ "opened_files", YAML::Node{ std::vector<std::string>{} }},
 	};
 

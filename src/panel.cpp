@@ -7,6 +7,7 @@
 #include "ghost.h"
 #include "panel.h"
 #include "boss.h"
+#include "cfg.h"
 #include "imgui_cfg.h"
 
 #include <imgui_internal.h>
@@ -17,6 +18,7 @@ extern SDL_Window* g_window;
 extern SDL_Renderer* g_renderer;
 extern std::vector<std::shared_ptr<BOSSRankingData>> g_spotpass_files;
 extern TextureManager g_texture_manager;
+extern std::vector<std::function<void()>> g_funcqueue;
 
 extern ImFont* g_font_rodin;
 extern ImFont* g_font_monospace;
@@ -24,6 +26,8 @@ extern ImFont* g_font_monospace;
 extern bool g_imgui_config_screen_open;
 
 std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf8_conv;
+
+bool g_display_flags = true;
 
 void ImGuiPanel::render_hex_view(uint8_t* src, size_t size, uint16_t view_length, uint16_t view_width)
 {
@@ -177,25 +181,7 @@ void ImGuiPanel::render()
 		
 		// File manipulation operations
 
-		this->ranking_directory_text();
-
-		if (ImGui::MenuItem("Close", nullptr, false, current_file != nullptr))
-		{
-			auto it = std::find(g_spotpass_files.begin(), g_spotpass_files.end(), current_file);
-
-			if (it != g_spotpass_files.end())
-			{
-				g_spotpass_files.erase(it);
-			}
-
-			current_file = nullptr;
-			is_cup_selected = false;
-		}
-		TOOLTIP("Closes spotpass file\nSave before closing!");
-
-		if (ImGui::MenuItem("Save", nullptr, false, current_file != nullptr)) current_file->save(false);
-		if (ImGui::MenuItem("Save As", nullptr, false, current_file != nullptr)) current_file->save();
-		if (ImGui::MenuItem("Reload from File", nullptr, false, current_file != nullptr)) current_file->reload();
+		this->single_file_operations();
 
 		const size_t _file_count = g_spotpass_files.size();
 		if (_file_count > 0)
@@ -283,6 +269,7 @@ void ImGuiPanel::render()
 		ImGui::PushID(idx);
 		ImGui::PushStyleColor(ImGuiCol_Tab, _label_color);
 		ImGui::PushStyleColor(ImGuiCol_TabActive, _label_active_color);
+
 		if (ImGui::BeginTabItem(_label.c_str()))
 		{
 			is_cup_selected = true;
@@ -290,13 +277,28 @@ void ImGuiPanel::render()
 
 			ImGui::EndTabItem();
 		}
+
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+		{
+			ImGui::PushID("SingleFileOperations");
+			ImGui::OpenPopup("SingleFileOperations");
+			ImGui::PopID();
+		}
+
+		ImGui::PushID("SingleFileOperations");
+		if (ImGui::BeginPopup("SingleFileOperations"))
+		{
+			this->single_file_operations();
+			ImGui::EndPopup();
+		}
+		ImGui::PopID();
+
 		ImGui::PopStyleColor(2);
 		TOOLTIP("%s%s", _spdata->file_directory.c_str(), _spdata->edited ? "\n(Modified)" : "");
 
 		ImGui::PopID();
 		idx++;
 	}
-
 	ImGui::EndTabBar();
 
 	if (is_cup_selected)
@@ -347,7 +349,6 @@ void ImGuiPanel::render()
 	}
 
 	ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
-	ImGui::Checkbox("Display Flags", &display_flags);
 
 	ImGui::PushID("Load Failed");
 	if (ImGui::BeginPopupModal("Load Failed", NULL, ImGuiWindowFlags_AlwaysAutoResize))
@@ -359,7 +360,6 @@ void ImGuiPanel::render()
 	}
 	ImGui::PopID();
 	ImGui::End();
-
 
 	ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoCollapse);
 	if (current_file)
@@ -451,6 +451,42 @@ void ImGuiPanel::ranking_directory_text()
 	}
 }
 
+void ImGuiPanel::single_file_operations()
+{
+	this->ranking_directory_text();
+
+	if (ImGui::MenuItem("Close", nullptr, false, current_file != nullptr))
+	{
+		g_funcqueue.emplace_back([this]()
+			{
+				auto it = std::find(g_spotpass_files.begin(), g_spotpass_files.end(), current_file);
+
+				if (it != g_spotpass_files.end())
+				{
+					g_spotpass_files.erase(it);
+				}
+
+				std::vector<std::string> opened_files;
+
+				for (auto& file : g_spotpass_files)
+				{
+					opened_files.emplace_back(file->file_directory);
+				}
+
+				Config::set_setting("opened_files", YAML::Node(opened_files));
+
+				current_file = nullptr;
+				is_cup_selected = false;
+			}
+		);
+	}
+	TOOLTIP("Closes spotpass file\nSave before closing!");
+
+	if (ImGui::MenuItem("Save", nullptr, false, current_file != nullptr)) current_file->save(false);
+	if (ImGui::MenuItem("Save As", nullptr, false, current_file != nullptr)) current_file->save();
+	if (ImGui::MenuItem("Reload from File", nullptr, false, current_file != nullptr)) current_file->reload();
+}
+
 void ImGuiPanel::draw_ghost_details(std::unique_ptr<Ghost>& _ghost)
 {
 	/*
@@ -466,7 +502,7 @@ void ImGuiPanel::draw_ghost_details(std::unique_ptr<Ghost>& _ghost)
 	}
 	ImGui::SameLine();
 	
-	if (display_flags)
+	if (g_display_flags)
 	{
 		nation_flag_image(_ghost->country_id);
 	}

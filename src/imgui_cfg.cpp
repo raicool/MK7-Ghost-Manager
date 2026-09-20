@@ -5,6 +5,7 @@
 #include "cfg.h"
 
 extern double g_window_framerate;
+extern bool g_display_flags;
 
 bool g_imgui_config_screen_open = false;
 
@@ -31,5 +32,10 @@ static void imgui_cfg_settings_tab()
 	{
 		Config::set_setting("framerate", YAML::Node{ _tmp_framerate });
 		g_window_framerate = FRAMETIME(_tmp_framerate);
+	}
+
+	if (ImGui::Checkbox("Display Flags", &g_display_flags))
+	{
+		Config::set_setting("display_flags", YAML::Node{ g_display_flags });
 	}
 }
