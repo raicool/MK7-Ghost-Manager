@@ -5,7 +5,7 @@
 
 This tool allows you to customize mario kart 7's spotpass ghosts with your own!
 
-![](https://imgur.com/ZMfMH5G.png)
+![](preview.png)
 
 credits to B_squo for replay documentation https://twitter.com/B_squo
 ## TODO
