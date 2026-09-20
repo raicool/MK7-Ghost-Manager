@@ -163,7 +163,7 @@ void panel::render()
 			{
 				for (auto& file : g_spotpass_files)
 				{
-					file->save();
+					file->save(false);
 				}
 			}
 			TOOLTIP("Save all loaded spotpass files");
@@ -288,7 +288,7 @@ void panel::render()
 
 		if (ImGui::Button("Save"))
 		{
-			current_cup->save();
+			current_cup->save(false);
 		}
 
 		const char* _file_directory = current_cup->file_directory.c_str();
