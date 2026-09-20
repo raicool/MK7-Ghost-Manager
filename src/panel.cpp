@@ -29,7 +29,18 @@ void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint1
 	ImGui::TableSetupColumn("Ascii");
 	ImGui::TableHeadersRow();
 
+	enum
+	{
+		ROW_OFFSET,
+		ROW_DATA,
+		ROW_ASCII
+	};
+
 	ImGui::PushFont(g_font_monospace);
+	ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0, 0, 0, 0));
+	ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, IM_COL32(127, 127, 127, 64));
+	ImGui::PushStyleColor(ImGuiCol_FrameBgActive, IM_COL32(127, 127, 127, 128));
+
 	uint8_t ptr_val = 0;
 	uint32_t offset = 0;
 	bool end = false;
@@ -39,21 +50,17 @@ void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint1
 		if (end) break;
 
 		ImGui::TableNextRow();
-		ImGui::TableSetColumnIndex(0);
 
+		ImGui::TableSetColumnIndex(ROW_OFFSET);
 		ImGui::Text("%04x", i * view_length);
 
-		ImGui::TableSetColumnIndex(1);
-
-		// hex display
+		ImGui::TableSetColumnIndex(ROW_DATA);
 		for (int j = 0; j < view_width; j++)
 		{
-
 			offset = (view_width * i) + j;
 			if (offset > size)
 			{
 				end = true;
-				ptr_val = 0;
 			}
 			else
 			{
@@ -67,39 +74,66 @@ void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint1
 			ImGui::PushStyleColor(ImGuiCol_Text, col);
 
 			ImGui::SameLine();
-			ImGui::Text("%02x", ptr_val);
+
+			if (end)
+			{
+				ImGui::Text("  ");
+			}
+			else
+			{
+				char text[3];
+				snprintf(text, 3, "%02x", ptr_val);
+				ImGui::PushID(offset);
+				ImGui::PushItemWidth(ImGui::GetFontSize() * 1.5);
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+
+				if (ImGui::InputText("##", text, 3, ImGuiInputTextFlags_CharsHexadecimal))
+				{
+					if (isxdigit(text[0]) && isxdigit(text[1]))
+					{
+						src[offset] = strtol(text, 0, 2);
+					}
+				}
+
+				ImGui::PopStyleVar();
+				ImGui::PopItemWidth();
+				ImGui::PopID();
+			}
 
 			ImGui::PopStyleColor();
 		}
 
-		ImGui::TableSetColumnIndex(2);
-
-		// ascii display
+		ImGui::TableSetColumnIndex(ROW_ASCII);
 		for (int j = 0; j < view_width; j++)
 		{
 			offset = (view_width * i) + j;
+
 			if (offset > size)
 			{
 				end = true;
-				ptr_val = 0;
+				ptr_val = ' ';
 			}
 			else
 			{
 				ptr_val = src[offset];
 			}
 
-			uint32_t col = (ptr_val <= 0x20 || ptr_val > 0x7f) ?
-				IM_COL32(255, 255, 255, 255) :
-				IM_COL32(127, 127, 127, 255);
+			bool non_printable = ptr_val < 0x20 || ptr_val > 0x7f;
 
+			uint32_t col = non_printable ?
+				IM_COL32(127, 127, 127, 255) :
+				IM_COL32(255, 255, 255, 255);
+			
 			ImGui::PushStyleColor(ImGuiCol_Text, col);
 
-			ImGui::SameLine();
-			ImGui::Text("%c", ptr_val);
+			ImGui::SameLine(0, 0);
+			ImGui::Text("%c", non_printable ? '.' : ptr_val);
 
 			ImGui::PopStyleColor();
 		}
 	}
+
+	ImGui::PopStyleColor(3);
 	ImGui::PopFont();
 	ImGui::EndTable();
 }
