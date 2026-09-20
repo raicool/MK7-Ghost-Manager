@@ -7,7 +7,11 @@
 #include "ghost.h"
 #include "panel.h"
 #include "boss.h"
+#include "imgui_cfg.h"
+
 #include <imgui_internal.h>
+
+#define TOOLTIP(x, ...) if (ImGui::IsItemHovered()) ImGui::SetTooltip(x, __VA_ARGS__)
 
 extern SDL_Window* g_window;
 extern SDL_Renderer* g_renderer;
@@ -17,8 +21,9 @@ extern TextureManager g_texture_manager;
 extern ImFont* g_font_rodin;
 extern ImFont* g_font_monospace;
 
+extern bool g_imgui_config_screen_open;
+
 std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf8_conv;
-#define TOOLTIP(x, ...) if (ImGui::IsItemHovered()) ImGui::SetTooltip(x, __VA_ARGS__)
 
 void ImGuiPanel::render_hex_view(uint8_t* src, size_t size, uint16_t view_length, uint16_t view_width)
 {
@@ -148,8 +153,25 @@ void ImGuiPanel::render()
 	{
 		// File open operations
 
-		if (ImGui::MenuItem("Open SpotPass Save Folder")) open_spotpass_folder();
-		if (ImGui::MenuItem("Open SpotPass Save File")) open_spotpass_file();
+		if (ImGui::MenuItem("Open SpotPass Save Folder"))
+		{
+			const char* folder_dir = open_folder();
+			if (!folder_dir) return;
+
+			for (const std::filesystem::directory_entry& file : std::filesystem::directory_iterator(folder_dir))
+			{
+				auto file_path = file.path().string();
+
+				open_spotpass_file(file_path.c_str());
+			}
+		}
+		if (ImGui::MenuItem("Open SpotPass Save File"))
+		{
+			const char* file_path = open_file();
+			if (!file_path) return;
+
+			open_spotpass_file(file_path);
+		}
 
 		ImGui::Separator();
 		
@@ -211,6 +233,13 @@ void ImGuiPanel::render()
 			}
 			TOOLTIP("Saves miis from all ghosts within loaded spotpass files");
 		}
+
+		ImGui::EndMenu();
+	}
+
+	if (ImGui::BeginMenu("Settings"))
+	{
+		if (ImGui::MenuItem("Open Settings")) g_imgui_config_screen_open = true;
 
 		ImGui::EndMenu();
 	}
@@ -395,6 +424,8 @@ void ImGuiPanel::render()
 		}
 	}
 	ImGui::End();
+
+	imgui_cfg_render();
 }
 
 void ImGuiPanel::ranking_directory_text()

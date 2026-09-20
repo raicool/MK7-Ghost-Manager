@@ -2,13 +2,14 @@
 #include "boss.h"
 
 #include "common/common.h"
+#include "cfg.h"
+
+#include <yaml-cpp/yaml.h>
 
 std::vector<std::shared_ptr<BOSSRankingData>> g_spotpass_files;
 
-void open_spotpass_file()
+void open_spotpass_file(const char* file_path)
 {
-	const char* file_path = open_file();
-
 	std::shared_ptr<BOSSRankingData> _spdata = std::make_shared<BOSSRankingData>();
 	_spdata->load(file_path);
 
@@ -17,29 +18,15 @@ void open_spotpass_file()
 		LOG_DEBUG("Cup = {}, file = {}", _spdata->cup_id, file_path);
 
 		g_spotpass_files.emplace_back(_spdata);
-	}
-}
 
-void open_spotpass_folder()
-{
-	g_spotpass_files.clear();
+		std::vector<std::string> opened_files;
 
-	const char* folder_dir = open_folder();
-	if (!folder_dir) return;
-
-	for (const std::filesystem::directory_entry& file : std::filesystem::directory_iterator(folder_dir))
-	{
-		auto file_path = file.path().string();
-
-		std::shared_ptr<BOSSRankingData> _spdata = std::make_shared<BOSSRankingData>();
-		_spdata->load(file_path);
-
-		if (_spdata->cup_id != -1)
+		for (auto& file : g_spotpass_files)
 		{
-			LOG_DEBUG("Cup = {}, file = {}", _spdata->cup_id, file_path);
-
-			g_spotpass_files.emplace_back(_spdata);
+			opened_files.emplace_back(file->file_directory);
 		}
+
+		Config::set_setting("opened_files", YAML::Node(opened_files));
 	}
 }
 
@@ -88,7 +75,6 @@ uint8_t BOSSRankingData::load(std::string dir)
 		LOG_ERROR("load error : could not open \"{}\"", dir);
 		return -1;
 	}
-
 
 	bin_read<uint8_t>(&cup_id, spotpass_data, 0x2f);
 	bin_read<uint8_t>(header_data, spotpass_data, (uint32_t)0, 0x64);
@@ -175,8 +161,7 @@ uint8_t BOSSRankingData::load_course_ghosts(std::array<std::unique_ptr<Ghost>, 2
 
 			bin_read<uint8_t>(__ghost_data_buffer, spotpass_data, offset, GHOST_SIZE);
 
-			_ghost->
-			this->parse_ghost(_ghost, __ghost_data_buffer);
+			_ghost->parse_data(__ghost_data_buffer);
 
 			delete[] __ghost_data_buffer;
 		}
@@ -204,7 +189,7 @@ bool BOSSRankingData::overwrite_ghost(std::unique_ptr<Ghost>& ghost, const char*
 	bin_read(ghost_data, ghost_file, 0u, GHOST_SIZE);
 	ghost_file.close();
 
-	if (this->parse_ghost(ghost, ghost_data) == false)
+	if (ghost->parse_data(ghost_data) == false)
 	{
 		delete[] ghost_data;
 		return false;

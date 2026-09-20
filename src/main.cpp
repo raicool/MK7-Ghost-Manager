@@ -5,11 +5,7 @@
 #include "boss.h"
 #include "version.h"
 #include "panel.h"
-
-#define NANOSECONDS (double)1000000000
-#define FRAMETIME ((double)NANOSECONDS / 60)
-#define SDL_CONVERT_PERFORMANCE_TIME \
-	((double)SDL_GetPerformanceCounter() / (double)SDL_GetPerformanceFrequency()) *	NANOSECONDS
+#include "cfg.h"
 
 #define _ms_cast(x) std::chrono::duration_cast<std::chrono::milliseconds>(x)
 
@@ -21,12 +17,21 @@ ImFont* g_font_default = nullptr;
 ImFont* g_font_rodin = nullptr;
 ImFont* g_font_monospace = nullptr;
 
+double g_window_framerate = FRAMETIME(60);
+
 int main()
 {
 	SDL_Event __sdl_event;
 	ImGuiPanel __imgui_panel;
 
 	Logger::init_logger();
+	Config::load();
+	const double config_framerate = Config::get_setting("framerate").as<double>();
+	g_window_framerate = FRAMETIME(config_framerate);
+
+	std::vector<std::string> config_opened_files =
+		Config::get_setting("opened_files").as<std::vector<std::string>>();
+
 	LOG_INFO("\n"
 		"------------------------------------------------------------------------------------\n"
 		" MK7 Spotpass Ghost Manager\n"
@@ -68,6 +73,11 @@ int main()
 	g_texture_manager.current_renderer = g_renderer;
 	g_texture_manager.load_ghost_textures();
 
+	for (std::string& path : config_opened_files)
+	{
+		open_spotpass_file(path.c_str());
+	}
+
 	double _start_interv = 0;
 	while (1)
 	{
@@ -91,8 +101,9 @@ int main()
 		ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), g_renderer);
 
 		SDL_RenderPresent(g_renderer);
-		SDL_DelayPrecise(std::clamp(FRAMETIME - (SDL_CONVERT_PERFORMANCE_TIME - _start_interv), 0.0, FRAMETIME));
+		SDL_DelayPrecise(std::clamp(g_window_framerate - (SDL_CONVERT_PERFORMANCE_TIME - _start_interv), 0.0, g_window_framerate));
 	}
 
+	Config::save();
 	g_texture_manager.terminate_thread();
 }

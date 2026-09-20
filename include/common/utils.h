@@ -13,6 +13,11 @@
 #define PACKED __attribute__((packed))
 #endif
 
+#define NANOSECONDS (double)1000000000
+#define FRAMETIME(x) ((double)NANOSECONDS / x)
+#define SDL_CONVERT_PERFORMANCE_TIME \
+	((double)SDL_GetPerformanceCounter() / (double)SDL_GetPerformanceFrequency()) *	NANOSECONDS
+
 // file management
 static char dir_buf[256]{ 0 };
 /*

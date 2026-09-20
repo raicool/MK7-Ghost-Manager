@@ -53,9 +53,7 @@ struct BOSSRankingData
 	uint8_t load(std::string dir);
 	void save(bool prompt_file = true);
 	void reload();
-
 	uint8_t load_course_ghosts(std::array<std::unique_ptr<Ghost>, 20>& courses, size_t file_offset);
-	bool parse_ghost(std::unique_ptr<Ghost>& ghost, const uint8_t* data);
 
 	//
 	bool overwrite_ghost(std::unique_ptr<Ghost>& ghost, const char* ghost_dir);
@@ -66,5 +64,4 @@ struct BOSSRankingData
 	void save_all_ghost_miis(const std::u16string directory_utf16);
 };
 
-void open_spotpass_file();
-void open_spotpass_folder();
+void open_spotpass_file(const char* file_path);

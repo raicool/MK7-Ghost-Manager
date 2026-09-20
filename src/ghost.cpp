@@ -3,6 +3,29 @@
 
 #include "cfl.h"
 
+void Ghost::cpy_to_buffer(char* ghost_buffer)
+{
+	// set file header (DGDC)
+	*(uint32_t*)&ghost_buffer[0] = 0x43444744;
+
+	memcpy(ghost_buffer + 0x04, serialized.finished_time.data, sizeof(PackedTime));
+	memcpy(ghost_buffer + 0x07, serialized.data, 0xb9);
+	memcpy(ghost_buffer + 0xc0, kdpad_data, 0x27d8);
+
+	uint32_t crc32 = crc32b((unsigned char*)ghost_buffer, GHOST_SIZE);
+
+	*(uint32_t*)&ghost_buffer[GHOST_SIZE] = crc32;
+}
+
+void Ghost::save_mii(std::wstring path)
+{
+	const uint64_t system_id = mii_data.system_id;
+
+	std::fstream mii_stream(path, std::ios::out | std::ios::binary);
+	bin_write<CFLStoreData>(&mii_data, mii_stream, 0u, sizeof(CFLStoreData));
+	mii_stream.close();
+}
+
 bool Ghost::parse_data(const uint8_t* data)
 {
 	if (((uint32_t*)data)[0] != 0x43444744)

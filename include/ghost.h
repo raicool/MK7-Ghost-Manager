@@ -151,29 +151,11 @@ struct Ghost
 	// Ghost's raw input data, padding included
 	uint8_t kdpad_data[0x27d8];
 
+	// parses serialized data from a ghost header into struct members
+	bool parse_data(const uint8_t* data);
+
 	// Assumes ghost_buffer is at least 0x2898 bytes
-	void cpy_to_buffer(char* ghost_buffer)
-	{
-		// set file header (DGDC)
-		*(uint32_t*)&ghost_buffer[0] = 0x43444744;
+	void cpy_to_buffer(char* ghost_buffer);
 
-		memcpy(ghost_buffer + 0x04, serialized.finished_time.data, sizeof(PackedTime));
-		memcpy(ghost_buffer + 0x07, serialized.data, 0xb9);
-		memcpy(ghost_buffer + 0xc0, kdpad_data, 0x27d8);
-
-		uint32_t crc32 = crc32b((unsigned char*)ghost_buffer, GHOST_SIZE);
-
-		*(uint32_t*)&ghost_buffer[GHOST_SIZE] = crc32;
-	}
-
-	void save_mii(std::wstring path)
-	{
-		const uint64_t system_id = mii_data.system_id;
-
-		std::fstream mii_stream(path, std::ios::out | std::ios::binary);
-
-		bin_write<CFLStoreData>(&mii_data, mii_stream, 0u, sizeof(CFLStoreData));
-
-		mii_stream.close();
-	}
+	void save_mii(std::wstring path);
 };
