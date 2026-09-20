@@ -335,14 +335,10 @@ void ImGuiPanel::render()
 
 
 	ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoCollapse);
-	/*
-	*	Cup ghosts will be rendered here
-	*/
 	if (current_file)
 	{
 		if (ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH))
 		{
-
 			std::array<std::unique_ptr<Ghost>, 20>* coursedata = current_file->get_course(course_idx);
 
 			if (coursedata)
@@ -498,9 +494,53 @@ void ImGuiPanel::draw_ghost_details(std::unique_ptr<Ghost>& _ghost)
 
 	ImGui::NewLine();
 	
-	if (ImGui::TreeNode("View Mii Image"))
+	if (ImGui::TreeNode("View Mii"))
 	{
 		mii_image(&_ghost->mii_data, 128);
+
+		ImGui::SameLine();
+
+		const auto mii_name = utf8_conv.to_bytes(utf16be((char*)_ghost->mii_data.name_utf16, 0x14));
+		const auto author_name = utf8_conv.to_bytes(utf16be((char*)_ghost->mii_data.author_name_utf16, 0x14));
+		const auto system_id = std::vformat("{:016x}", std::make_format_args(_ghost->mii_data.system_id));
+		const auto mii_id = std::vformat("{:08x}", std::make_format_args(_ghost->mii_data.mii_id));
+
+		if (ImGui::BeginTable("##", 2, ImGuiTableFlags_SizingFixedFit))
+		{
+			ImGui::TableSetupColumn("##", 0, 128);
+			ImGui::TableSetupColumn("##", 0, 256);
+
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("Mii Name");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::InputText("##Mii Name", (char*)mii_name.c_str(), mii_name.size(), ImGuiInputTextFlags_ReadOnly);
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("Author");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::InputText("##Author", (char*)author_name.c_str(), author_name.size(), ImGuiInputTextFlags_ReadOnly);
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("System ID");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::PushFont(g_font_monospace);
+			ImGui::InputText("##System ID", (char*)system_id.c_str(), system_id.size(), ImGuiInputTextFlags_ReadOnly);
+			ImGui::PopFont();
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("Mii ID");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::PushFont(g_font_monospace);
+			ImGui::InputText("##Mii ID", (char*)mii_id.c_str(), mii_id.size(), ImGuiInputTextFlags_ReadOnly);
+			ImGui::PopFont();
+
+			ImGui::EndTable();
+		}
 
 		ImGui::TreePop();
 	}
