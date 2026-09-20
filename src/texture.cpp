@@ -110,6 +110,7 @@ struct TextureThreadQueueData
 std::mutex mlock;
 std::queue<TextureThreadQueueData> texture_queue;
 std::condition_variable cv;
+bool terminating = false;
 
 void async_job_fetch_texture()
 {
@@ -117,7 +118,17 @@ void async_job_fetch_texture()
 
 	while (1)
 	{
-		cv.wait(lock, []{ return texture_queue.size() > 0; });
+		cv.wait(lock, [] { return true; });
+
+		if (terminating)
+		{
+			break;
+		}
+
+		if (texture_queue.size() <= 0)
+		{
+			continue;
+		}
 
 		auto job = texture_queue.front();
 		texture_queue.pop();
@@ -199,4 +210,11 @@ void* TextureManager::request_mii_texture(CFLStoreData* mii_raw_data)
 		return driver[CHAR_MII_FEMALE];
 	}
 #endif
+}
+
+void TextureManager::terminate_thread()
+{
+	terminating = true;
+	cv.notify_all();
+	t.join();
 }
