@@ -173,9 +173,9 @@ void ImGuiPanel::render()
 		}
 		TOOLTIP("Closes spotpass file\nSave before closing!");
 
-		if (ImGui::MenuItem("Save")) current_file->save(false);
-		if (ImGui::MenuItem("Save As")) current_file->save();
-		if (ImGui::MenuItem("Reload from File")) current_file->reload();
+		if (ImGui::MenuItem("Save", nullptr, false, current_file != nullptr)) current_file->save(false);
+		if (ImGui::MenuItem("Save As", nullptr, false, current_file != nullptr)) current_file->save();
+		if (ImGui::MenuItem("Reload from File", nullptr, false, current_file != nullptr)) current_file->reload();
 
 		const size_t _file_count = g_spotpass_files.size();
 		if (_file_count > 0)
