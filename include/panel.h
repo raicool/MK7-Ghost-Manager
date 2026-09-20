@@ -9,6 +9,8 @@ struct ImGuiPanel
 	bool is_cup_selected = false;
 	bool display_flags = true;
 	
+	void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint16_t view_width = 16);
+
 	// Draw text for currently loaded ranking file
 	void ranking_directory_text();
 

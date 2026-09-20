@@ -20,7 +20,7 @@ extern ImFont* g_font_monospace;
 std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf8_conv;
 #define TOOLTIP(x, ...) if (ImGui::IsItemHovered()) ImGui::SetTooltip(x, __VA_ARGS__)
 
-void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint16_t view_width = 16)
+void ImGuiPanel::render_hex_view(uint8_t* src, size_t size, uint16_t view_length, uint16_t view_width)
 {
 	ImGui::BeginTable("Hex Viewer", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
 	ImGui::TableSetupScrollFreeze(1, 0);
@@ -90,6 +90,7 @@ void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint1
 				if (ImGui::InputText("##", text, 3, ImGuiInputTextFlags_CharsHexadecimal))
 				{
 					src[offset] = (char)strtol(text, 0, 16);
+					current_file->edited = true;
 				}
 
 				ImGui::PopStyleVar();
