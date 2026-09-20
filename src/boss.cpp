@@ -175,6 +175,7 @@ uint8_t BOSSRankingData::load_course_ghosts(std::array<std::unique_ptr<Ghost>, 2
 
 			bin_read<uint8_t>(__ghost_data_buffer, spotpass_data, offset, GHOST_SIZE);
 
+			_ghost->
 			this->parse_ghost(_ghost, __ghost_data_buffer);
 
 			delete[] __ghost_data_buffer;
@@ -185,33 +186,6 @@ uint8_t BOSSRankingData::load_course_ghosts(std::array<std::unique_ptr<Ghost>, 2
 	}
 
 	return _ghost_count;
-}
-
-bool BOSSRankingData::parse_ghost(std::unique_ptr<Ghost>& ghost, const uint8_t* data)
-{
-	if (((uint32_t*)data)[0] != 0x43444744)
-	{
-		LOG_ERROR("parse_ghost() : invalid CDGD header magic");
-		return false;
-	}
-
-	memcpy(&ghost->serialized, data, sizeof(GhostRawData));
-	memcpy(ghost->kdpad_data, data + 0xC0, 0x27D8);
-
-	ghost->course_id = ghost->serialized.course();
-	ghost->character_id = ghost->serialized.character();
-	ghost->kart_id = ghost->serialized.kart();
-	ghost->tire_id = ghost->serialized.tire();
-	ghost->glider_id = ghost->serialized.wing();
-
-	char mii_name[0x14];
-	memcpy(mii_name, data + 0x18, 0x14);
-	ghost->player_name = utf16be(mii_name, 0x14).c_str();
-
-	memcpy(&ghost->mii_data, data + 0x30, sizeof(CFLStoreData));
-
-	ghost->country_id = ghost->serialized.country();
-	return true;
 }
 
 // replaces ghost data at a given offset with new data from replay file
