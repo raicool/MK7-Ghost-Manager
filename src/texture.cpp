@@ -118,16 +118,11 @@ void async_job_fetch_texture()
 
 	while (1)
 	{
-		cv.wait(lock, [] { return true; });
+		cv.wait(lock, [] { return terminating == true || texture_queue.size() > 0; });
 
 		if (terminating)
 		{
 			break;
-		}
-
-		if (texture_queue.size() <= 0)
-		{
-			continue;
 		}
 
 		auto job = texture_queue.front();
