@@ -15,7 +15,7 @@
 
 SDL_Window* g_window = nullptr;
 SDL_Renderer* g_renderer = nullptr;
-texture g_texture_manager;
+TextureManager g_texture_manager;
 
 ImFont* g_font_default = nullptr;
 ImFont* g_font_rodin = nullptr;

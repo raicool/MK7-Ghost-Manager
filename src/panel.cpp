@@ -12,7 +12,7 @@
 extern SDL_Window* g_window;
 extern SDL_Renderer* g_renderer;
 extern std::vector<std::shared_ptr<spotpass>> g_spotpass_files;
-extern texture g_texture_manager;
+extern TextureManager g_texture_manager;
 
 extern ImFont* g_font_rodin;
 extern ImFont* g_font_monospace;

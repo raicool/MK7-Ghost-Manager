@@ -9,21 +9,28 @@
 #define SYMBOL_TEXTURE_COUNT 0x03
 
 struct mii;
-enum async_texture_status
+enum AsyncTextureStatusEnum
 {
+	// surface/texture is not yet processed by texture loader thread
 	WORKING,
+
+	// surface data is created, texture data not ready
 	SURFACE_CREATED,
-	OK
+
+	// texture is ready to be read by main thread
+	READY
 };
-struct async_texture
+
+// texture data that is loaded from a separate thread
+// status set to AsyncTextureStatusEnum::READY when finished loading
+struct AsyncTextureData
 {
-	async_texture_status status;
+	AsyncTextureStatusEnum status;
 	SDL_Surface* surface;
 	SDL_Texture* data;
 };
 
-
-struct texture
+struct TextureManager
 {
 	void* driver[DRIVER_TEXTURE_COUNT];
 	void* body[BODY_TEXTURE_COUNT];
@@ -32,10 +39,11 @@ struct texture
 	void* symbol[SYMBOL_TEXTURE_COUNT];
 
 	std::unordered_map<std::string_view, SDL_Texture*> textures;
-	std::unordered_map<uint16_t, async_texture> mii_textures;
+	std::unordered_map<uint16_t, AsyncTextureData> mii_textures;
 	SDL_Renderer* current_renderer;
 	uint32_t texture_count;
 
+	void terminate_thread();
 	void load_ghost_textures(); // loads all the character, kart, tire, and glider textures into global arrays with the raw texture data
 	void* add_texture(const char* dir, std::string_view id);
 	void* request_mii_texture(mii* mii_raw_data);
