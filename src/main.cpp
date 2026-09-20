@@ -6,10 +6,10 @@
 #include "version.h"
 #include "panel.h"
 
-#define NANOSECONDS 1000000000
-#define FRAMETIME (NANOSECONDS / 60)
+#define NANOSECONDS (double)1000000000
+#define FRAMETIME ((double)NANOSECONDS / 60)
 #define SDL_CONVERT_PERFORMANCE_TIME \
-	(SDL_GetPerformanceCounter() / SDL_GetPerformanceFrequency()) *	NANOSECONDS
+	((double)SDL_GetPerformanceCounter() / (double)SDL_GetPerformanceFrequency()) *	NANOSECONDS
 
 #define _ms_cast(x) std::chrono::duration_cast<std::chrono::milliseconds>(x)
 
@@ -91,7 +91,7 @@ int main()
 		ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), g_renderer);
 
 		SDL_RenderPresent(g_renderer);
-		SDL_DelayPrecise(std::clamp(FRAMETIME - (SDL_CONVERT_PERFORMANCE_TIME - _start_interv), 0.0, (double)FRAMETIME));
+		SDL_DelayPrecise(std::clamp(FRAMETIME - (SDL_CONVERT_PERFORMANCE_TIME - _start_interv), 0.0, FRAMETIME));
 	}
 
 	g_texture_manager.terminate_thread();
