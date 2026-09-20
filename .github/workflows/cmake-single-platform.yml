@@ -11,7 +11,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Setup SDL/SDL_Image
