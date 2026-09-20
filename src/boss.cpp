@@ -236,6 +236,11 @@ void BOSSRankingData::extract_ghost(std::unique_ptr<Ghost>& _ghost)
 	snprintf(file_name, 13, "replay%02i.dat", _ghost->course_id);
 	replay_dir = create_file(file_name);
 
+	if (replay_dir == nullptr)
+	{
+		return;
+	}
+
 	delete[] file_name;
 
 	std::fstream replay(replay_dir, std::ios::out | std::ios::binary | std::ios::trunc);
