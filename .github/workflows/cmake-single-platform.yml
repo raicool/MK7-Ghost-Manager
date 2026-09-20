@@ -14,12 +14,6 @@ jobs:
     runs-on: ubuntu-slim
 
     steps:
-    - name: Setup Homebrew OpenSSL
-      # You may pin to the exact commit or the version.
-      # uses: seavan/setup-openssl@16008c93dfa0058fec365826c34cde2c9032388d
-      uses: seavan/setup-openssl@v1.0.3
-      with:
-        version: 
     - name: Setup SDL/SDL_Image
       uses: libsdl-org/setup-sdl@main
       with:
