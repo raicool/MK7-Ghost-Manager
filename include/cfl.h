@@ -1,24 +1,8 @@
 #pragma once
 
-enum character_set_t
-{
-	JPN_USA_EUR,
-	CHN,
-	KOR,
-	TWN,
-};
-
-enum console_t
-{
-	WII,
-	DS,
-	N3DS,
-	WIIU_SWITCH,
-};
-
 #pragma pack(push, 1)
 // https://www.3dbrew.org/wiki/Mii#Mii_format
-struct mii
+struct CFLStoreData
 {
 	// usually set to 3
 	uint8_t version;
@@ -67,5 +51,5 @@ struct mii
 	uint16_t crc16;
 
 };
-static_assert(sizeof(mii) == 0x60, "invalid size for mii struct");
+static_assert(sizeof(CFLStoreData) == 0x60, "invalid size for CFLStoreData struct");
 #pragma pack(pop)

@@ -8,7 +8,7 @@
 #define WING_TEXTURE_COUNT 0x07
 #define SYMBOL_TEXTURE_COUNT 0x03
 
-struct mii;
+struct CFLStoreData;
 enum AsyncTextureStatusEnum
 {
 	// surface/texture is not yet processed by texture loader thread
@@ -46,5 +46,5 @@ struct TextureManager
 	void terminate_thread();
 	void load_ghost_textures(); // loads all the character, kart, tire, and glider textures into global arrays with the raw texture data
 	void* add_texture(const char* dir, std::string_view id);
-	void* request_mii_texture(mii* mii_raw_data);
+	void* request_mii_texture(CFLStoreData* mii_raw_data);
 };
