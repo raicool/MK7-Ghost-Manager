@@ -2,7 +2,7 @@
 
 #include "common/common.h"
 #include "texture.h"
-#include "spotpass.h"
+#include "boss.h"
 #include "version.h"
 #include "panel.h"
 

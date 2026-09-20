@@ -6,12 +6,12 @@
 #include "texture.h"
 #include "ghost.h"
 #include "panel.h"
-#include "spotpass.h"
+#include "boss.h"
 #include <imgui_internal.h>
 
 extern SDL_Window* g_window;
 extern SDL_Renderer* g_renderer;
-extern std::vector<std::shared_ptr<spotpass>> g_spotpass_files;
+extern std::vector<std::shared_ptr<BOSSRankingData>> g_spotpass_files;
 extern TextureManager g_texture_manager;
 
 extern ImFont* g_font_rodin;

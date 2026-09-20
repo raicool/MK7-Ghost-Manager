@@ -1,15 +1,15 @@
 #include "pch.h"
-#include "spotpass.h"
+#include "boss.h"
 
 #include "common/common.h"
 
-std::vector<std::shared_ptr<spotpass>> g_spotpass_files;
+std::vector<std::shared_ptr<BOSSRankingData>> g_spotpass_files;
 
 void open_spotpass_file()
 {
 	const char* file_path = open_file();
 
-	std::shared_ptr<spotpass> _spdata = std::make_shared<spotpass>();
+	std::shared_ptr<BOSSRankingData> _spdata = std::make_shared<BOSSRankingData>();
 	_spdata->load(file_path);
 
 	if (_spdata->cup_id != -1)
@@ -31,7 +31,7 @@ void open_spotpass_folder()
 	{
 		auto file_path = file.path().string();
 
-		std::shared_ptr<spotpass> _spdata = std::make_shared<spotpass>();
+		std::shared_ptr<BOSSRankingData> _spdata = std::make_shared<BOSSRankingData>();
 		_spdata->load(file_path);
 
 		if (_spdata->cup_id != -1)
@@ -43,12 +43,12 @@ void open_spotpass_folder()
 	}
 }
 
-std::vector<std::shared_ptr<spotpass>> get_spotpass_files()
+std::vector<std::shared_ptr<BOSSRankingData>> get_spotpass_files()
 {
 	return g_spotpass_files;
 }
 
-std::array<std::unique_ptr<ghost>, 20>* spotpass::get_course(uint8_t index)
+std::array<std::unique_ptr<Ghost>, 20>* BOSSRankingData::get_course(uint8_t index)
 {
 	
 	switch (index)
@@ -61,7 +61,7 @@ std::array<std::unique_ptr<ghost>, 20>* spotpass::get_course(uint8_t index)
 	}
 }
 
-uint8_t spotpass::load(std::string dir)
+uint8_t BOSSRankingData::load(std::string dir)
 {
 	uint32_t offset = 0;
 	uint32_t u32buffer = 0;
@@ -104,7 +104,7 @@ uint8_t spotpass::load(std::string dir)
 	return cup_id;
 }
 
-void spotpass::save(bool prompt_file)
+void BOSSRankingData::save(bool prompt_file)
 {
 	char* _spotpass_buffer = new char[0xcafe4];
 
@@ -119,7 +119,7 @@ void spotpass::save(bool prompt_file)
 	uint8_t _file_ghost_index = 0;
 	for (int i = 0; i < 4; i++)
 	{
-		const std::array<std::unique_ptr<ghost>, 20>* course = this->get_course(i);
+		const std::array<std::unique_ptr<Ghost>, 20>* course = this->get_course(i);
 
 		for (auto&& ghost : *course)
 		{	
@@ -152,7 +152,7 @@ void spotpass::save(bool prompt_file)
 	edited = false;
 }
 
-uint8_t spotpass::load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& ghosts, size_t file_offset)
+uint8_t BOSSRankingData::load_course_ghosts(std::array<std::unique_ptr<Ghost>, 20>& ghosts, size_t file_offset)
 {
 	uint8_t _ghost_count = 0;
 
@@ -165,10 +165,10 @@ uint8_t spotpass::load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& gho
 		if (verify_magic("DGDC", spotpass_data, sizeof(char) * 4, offset) == false)
 			continue; // invalid ghost header, skip
 
-		auto _ghost = std::make_unique<ghost>();
+		auto _ghost = std::make_unique<Ghost>();
 
 		_ghost->file_offset = offset;
-		_ghost->ghost_id = i;
+		_ghost->ghost_id = _ghost_count;
 
 		{
 			uint8_t* __ghost_data_buffer = new uint8_t[GHOST_SIZE];
@@ -187,7 +187,7 @@ uint8_t spotpass::load_course_ghosts(std::array<std::unique_ptr<ghost>, 20>& gho
 	return _ghost_count;
 }
 
-bool spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
+bool BOSSRankingData::parse_ghost(std::unique_ptr<Ghost>& ghost, const uint8_t* data)
 {
 	if (((uint32_t*)data)[0] != 0x43444744)
 	{
@@ -195,7 +195,7 @@ bool spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
 		return false;
 	}
 
-	memcpy(&ghost->serialized, data, sizeof(raw_ghost));
+	memcpy(&ghost->serialized, data, sizeof(GhostRawData));
 	memcpy(ghost->kdpad_data, data + 0xC0, 0x27D8);
 
 	ghost->course_id = ghost->serialized.course();
@@ -208,14 +208,14 @@ bool spotpass::parse_ghost(std::unique_ptr<ghost>& ghost, const uint8_t* data)
 	memcpy(mii_name, data + 0x18, 0x14);
 	ghost->player_name = utf16be(mii_name, 0x14).c_str();
 
-	memcpy(&ghost->mii_data, data + 0x30, sizeof(mii));
+	memcpy(&ghost->mii_data, data + 0x30, sizeof(CFLStoreData));
 
 	ghost->country_id = ghost->serialized.country();
 	return true;
 }
 
 // replaces ghost data at a given offset with new data from replay file
-bool spotpass::overwrite_ghost(std::unique_ptr<ghost>& ghost, const char* ghost_dir)
+bool BOSSRankingData::overwrite_ghost(std::unique_ptr<Ghost>& ghost, const char* ghost_dir)
 {
 	std::fstream ghost_file;
 	ghost_file.open(ghost_dir, std::ios::in | std::ios::binary);
@@ -243,7 +243,7 @@ bool spotpass::overwrite_ghost(std::unique_ptr<ghost>& ghost, const char* ghost_
 	}
 }
 
-void spotpass::delete_ghost(uint8_t course_index, std::unique_ptr<ghost>& _ghost)
+void BOSSRankingData::delete_ghost(uint8_t course_index, std::unique_ptr<Ghost>& _ghost)
 {
 	if (course_index >= 4)
 	{
@@ -267,7 +267,7 @@ void spotpass::delete_ghost(uint8_t course_index, std::unique_ptr<ghost>& _ghost
 *	extract a ghost from a spotpass file
 *	also adds crc-32 checksum to end of file
 */
-void spotpass::extract_ghost(std::unique_ptr<ghost>& _ghost)
+void BOSSRankingData::extract_ghost(std::unique_ptr<Ghost>& _ghost)
 {
 	char* file_name = new char[13];
 	char* ghost_buffer = new char[GHOST_SIZE + 4];
@@ -302,9 +302,15 @@ void spotpass::extract_ghost(std::unique_ptr<ghost>& _ghost)
 *	adds a ghost to a spotpass file
 *	returns true if there is room for the ghost, false if there is no room
 */
-bool spotpass::add_ghost(uint8_t course_index, const char* ghost_dir)
+bool BOSSRankingData::add_ghost(uint8_t course_index, const char* ghost_dir)
 {
-	std::array<std::unique_ptr<ghost>, 20>* course = this->get_course(course_index);
+	if (ghost_dir == nullptr)
+	{
+		LOG_ERROR("add_ghost() : invalid directory passed");
+		return false;
+	}
+
+	std::array<std::unique_ptr<Ghost>, 20>* course = this->get_course(course_index);
 
 	if (course == nullptr)
 	{
@@ -321,7 +327,7 @@ bool spotpass::add_ghost(uint8_t course_index, const char* ghost_dir)
 	{
 		if (*it == false)
 		{
-			*it = std::make_unique<ghost>();
+			*it = std::make_unique<Ghost>();
 			if (overwrite_ghost(*it, ghost_dir) == false)
 			{
 				LOG_ERROR("add_ghost() : error occured while trying to overwrite ghost data");
@@ -339,7 +345,7 @@ bool spotpass::add_ghost(uint8_t course_index, const char* ghost_dir)
 	return false;
 }
 
-void spotpass::reload()
+void BOSSRankingData::reload()
 {
 	edited = false;
 

@@ -1,11 +1,11 @@
 #pragma once
 
 struct ghost;
-struct spotpass;
 struct panel
+struct BOSSRankingData;
 {
-	std::shared_ptr<spotpass> current_cup = nullptr; //< which cup to display ghosts for in PANEL_GHOST_LIST
-	int32_t course_idx = 0; //< which course to display ghosts for in PANEL_GHOST_LIST
+	std::shared_ptr<BOSSRankingData> current_file = nullptr;
+	int32_t course_idx = 0;
 	bool is_cup_selected = false;
 	bool display_flags   = true;
 	
