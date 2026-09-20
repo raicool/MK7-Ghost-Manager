@@ -89,10 +89,7 @@ void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint1
 
 				if (ImGui::InputText("##", text, 3, ImGuiInputTextFlags_CharsHexadecimal))
 				{
-					if (isxdigit(text[0]) && isxdigit(text[1]))
-					{
-						src[offset] = strtol(text, 0, 2);
-					}
+					src[offset] = (char)strtol(text, 0, 16);
 				}
 
 				ImGui::PopStyleVar();
@@ -507,7 +504,7 @@ void ImGuiPanel::draw_ghost_details(std::unique_ptr<Ghost>& _ghost)
 
 		if (ImGui::BeginTable("##", 2, ImGuiTableFlags_SizingFixedFit))
 		{
-			ImGui::TableSetupColumn("##", 0, 128);
+			ImGui::TableSetupColumn("##", 0, 64);
 			ImGui::TableSetupColumn("##", 0, 256);
 
 
