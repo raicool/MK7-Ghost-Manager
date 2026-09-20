@@ -18,6 +18,7 @@ x86/
 # visual studio / vs code
 .vs/
 .vscode/
+*.vcxproj
 
 # visual studio cache files
 # files ending in .cache can be ignored
