@@ -2,7 +2,7 @@
 
 #include "spdlog/spdlog.h"
 
-struct logger
+struct Logger
 {
 	inline static std::shared_ptr<spdlog::logger> debuglogger;
 
@@ -22,13 +22,13 @@ struct logger
 	}
 }; 
 
-#define LOG_TRACE(...) logger::debuglogger->trace(__VA_ARGS__)
+#define LOG_TRACE(...) Logger::debuglogger->trace(__VA_ARGS__)
 #ifndef NDEBUG
-#define LOG_DEBUG(...) logger::debuglogger->debug(__VA_ARGS__)
+#define LOG_DEBUG(...) Logger::debuglogger->debug(__VA_ARGS__)
 #else
 #define LOG_DEBUG(...) void();
 #endif
-#define LOG_INFO(...)  logger::debuglogger->info(__VA_ARGS__)
-#define LOG_WARN(...)  logger::debuglogger->warn(__VA_ARGS__)
-#define LOG_ERROR(...) logger::debuglogger->error(__VA_ARGS__)
-#define LOG_FATAL(...) logger::debuglogger->critical(__VA_ARGS__)
+#define LOG_INFO(...)  Logger::debuglogger->info(__VA_ARGS__)
+#define LOG_WARN(...)  Logger::debuglogger->warn(__VA_ARGS__)
+#define LOG_ERROR(...) Logger::debuglogger->error(__VA_ARGS__)
+#define LOG_FATAL(...) Logger::debuglogger->critical(__VA_ARGS__)

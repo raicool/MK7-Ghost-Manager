@@ -1,14 +1,13 @@
 #pragma once
 
-struct ghost;
-struct panel
+struct Ghost;
 struct BOSSRankingData;
 struct ImGuiPanel
 {
 	std::shared_ptr<BOSSRankingData> current_file = nullptr;
 	int32_t course_idx = 0;
 	bool is_cup_selected = false;
-	bool display_flags   = true;
+	bool display_flags = true;
 	
 	// Draw text for currently loaded ranking file
 	void ranking_directory_text();

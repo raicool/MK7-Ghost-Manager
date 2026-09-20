@@ -24,9 +24,9 @@ ImFont* g_font_monospace = nullptr;
 int main()
 {
 	SDL_Event __sdl_event;
-	panel __imgui_panel;
+	ImGuiPanel __imgui_panel;
 
-	logger::init_logger();
+	Logger::init_logger();
 	LOG_INFO("\n"
 		"------------------------------------------------------------------------------------\n"
 		" MK7 Spotpass Ghost Manager\n"
@@ -93,4 +93,6 @@ int main()
 		SDL_RenderPresent(g_renderer);
 		SDL_DelayPrecise(std::clamp(FRAMETIME - (SDL_CONVERT_PERFORMANCE_TIME - _start_interv), 0.0, (double)FRAMETIME));
 	}
+
+	g_texture_manager.terminate_thread();
 }
