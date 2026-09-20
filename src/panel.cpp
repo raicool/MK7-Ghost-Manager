@@ -173,73 +173,7 @@ void ImGuiPanel::render()
 				{
 					for (auto& file : g_spotpass_files)
 					{
-						for (auto& ghosts : file->course_1)
-						{
-							if (ghosts)
-							{
-								const uint64_t system_id = ghosts->mii_data.system_id;
-
-								wchar_t format[512];
-								swprintf(format, L"%s/%016llx (%s).cfsd", (char*)directory_utf16.c_str(), system_id, (char*)ghosts->player_name.c_str());
-
-								std::fstream mii_stream(format, std::ios::out | std::ios::binary);
-
-								bin_write<CFLStoreData>(&ghosts->mii_data, mii_stream, 0u, sizeof(CFLStoreData));
-
-								mii_stream.close();
-							}
-
-							for (auto& ghosts : file->course_2)
-							{
-								if (ghosts)
-								{
-									const uint64_t system_id = ghosts->mii_data.system_id;
-
-									wchar_t format[512];
-									swprintf(format, L"%s/%016llx (%s).cfsd", (char*)directory_utf16.c_str(), system_id, (char*)ghosts->player_name.c_str());
-
-									std::fstream mii_stream(format, std::ios::out | std::ios::binary);
-
-									bin_write<CFLStoreData>(&ghosts->mii_data, mii_stream, 0u, sizeof(CFLStoreData));
-
-									mii_stream.close();
-								}
-							}
-
-							for (auto& ghosts : file->course_3)
-							{
-								if (ghosts)
-								{
-									const uint64_t system_id = ghosts->mii_data.system_id;
-
-									wchar_t format[512];
-									swprintf(format, L"%s/%016llx (%s).cfsd", (char*)directory_utf16.c_str(), system_id, (char*)ghosts->player_name.c_str());
-
-									std::fstream mii_stream(format, std::ios::out | std::ios::binary);
-
-									bin_write<CFLStoreData>(&ghosts->mii_data, mii_stream, 0u, sizeof(CFLStoreData));
-
-									mii_stream.close();
-								}
-							}
-
-							for (auto& ghosts : file->course_4)
-							{
-								if (ghosts)
-								{
-									const uint64_t system_id = ghosts->mii_data.system_id;
-
-									wchar_t format[512];
-									swprintf(format, L"%s/%016llx (%s).cfsd", (char*)directory_utf16.c_str(), system_id, (char*)ghosts->player_name.c_str());
-
-									std::fstream mii_stream(format, std::ios::out | std::ios::binary);
-
-									bin_write<CFLStoreData>(&ghosts->mii_data, mii_stream, 0u, sizeof(CFLStoreData));
-
-									mii_stream.close();
-								}
-							}
-						}
+						file->save_all_ghost_miis(directory_utf16);
 					}
 				}
 			}

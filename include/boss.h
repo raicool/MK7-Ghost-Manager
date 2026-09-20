@@ -22,17 +22,48 @@ struct BOSSRankingData
 
 	std::array<std::unique_ptr<Ghost>, 20>* get_course(uint8_t index);
 
+	void for_each_file(std::function<void(std::unique_ptr<Ghost>& ghost)> func)
+	{
+		for (auto& ghost : course_1)
+		{
+			if (ghost == nullptr) continue;
+			func(ghost);
+		}
+
+		for (auto& ghost : course_2)
+		{
+			if (ghost == nullptr) continue;
+			func(ghost);
+		}
+
+		for (auto& ghost : course_3)
+		{
+			if (ghost == nullptr) continue;
+			func(ghost);
+		}
+
+		for (auto& ghost : course_4)
+		{
+			if (ghost == nullptr) continue;
+			func(ghost);
+		}
+	}
+
+	// file operation functions
 	uint8_t load(std::string dir);
 	void save(bool prompt_file = true);
+	void reload();
 
 	uint8_t load_course_ghosts(std::array<std::unique_ptr<Ghost>, 20>& courses, size_t file_offset);
 	bool parse_ghost(std::unique_ptr<Ghost>& ghost, const uint8_t* data);
-	void reload();
 
+	//
 	bool overwrite_ghost(std::unique_ptr<Ghost>& ghost, const char* ghost_dir);
 	void extract_ghost(std::unique_ptr<Ghost>& _ghost);
 	bool add_ghost(uint8_t course_index, const char* ghost_dir);
 	void delete_ghost(uint8_t course_index, std::unique_ptr<Ghost>& _ghost);
+
+	void save_all_ghost_miis(const std::u16string directory_utf16);
 };
 
 void open_spotpass_file();

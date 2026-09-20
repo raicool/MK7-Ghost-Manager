@@ -165,4 +165,15 @@ struct Ghost
 
 		*(uint32_t*)&ghost_buffer[GHOST_SIZE] = crc32;
 	}
+
+	void save_mii(std::wstring path)
+	{
+		const uint64_t system_id = mii_data.system_id;
+
+		std::fstream mii_stream(path, std::ios::out | std::ios::binary);
+
+		bin_write<CFLStoreData>(&mii_data, mii_stream, 0u, sizeof(CFLStoreData));
+
+		mii_stream.close();
+	}
 };

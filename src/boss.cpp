@@ -345,31 +345,30 @@ bool BOSSRankingData::add_ghost(uint8_t course_index, const char* ghost_dir)
 	return false;
 }
 
+void BOSSRankingData::save_all_ghost_miis(const std::u16string directory_utf16)
+{
+	wchar_t filename[512];
+
+	for_each_file([&filename, directory_utf16](std::unique_ptr<Ghost>& ghost)
+		{
+			const uint64_t system_id = ghost->mii_data.system_id;
+
+			swprintf(filename, L"%s/%016llx (%s).cfsd", (char*)directory_utf16.c_str(), system_id, (char*)ghost->player_name.c_str());
+
+			ghost->save_mii(filename);
+		}
+	);
+}
+
 void BOSSRankingData::reload()
 {
 	edited = false;
 
-	// lazy
-
-	for (auto&& ghost : course_1)
-	{
-		ghost.release();
-	}
-
-	for (auto&& ghost : course_2)
-	{
-		ghost.release();
-	}
-
-	for (auto&& ghost : course_3)
-	{
-		ghost.release();
-	}
-
-	for (auto&& ghost : course_4)
-	{
-		ghost.release();
-	}
+	this->for_each_file([](std::unique_ptr<Ghost>& ghost)
+		{
+			ghost.release();
+		}
+	);
 
 	load(file_directory);
 }
