@@ -7,6 +7,7 @@
 #include "ghost.h"
 #include "panel.h"
 #include "boss.h"
+#include "archive.h"
 #include "cfg.h"
 #include "imgui_cfg.h"
 
@@ -16,7 +17,7 @@
 
 extern SDL_Window* g_window;
 extern SDL_Renderer* g_renderer;
-extern std::vector<std::shared_ptr<BOSSRankingData>> g_spotpass_files;
+extern std::vector<std::shared_ptr<SerializedFile>> g_opened_files;
 extern TextureManager g_texture_manager;
 extern std::vector<std::function<void()>> g_funcqueue;
 
@@ -176,6 +177,13 @@ void ImGuiPanel::render()
 
 			open_spotpass_file(file_path);
 		}
+		if (ImGui::MenuItem("Open Save File (systemXX.dat)"))
+		{
+			const char* file_path = open_file();
+			if (!file_path) return;
+
+			open_archive_file(file_path);
+		}
 
 		ImGui::Separator();
 		
@@ -183,19 +191,19 @@ void ImGuiPanel::render()
 
 		this->single_file_operations();
 
-		const size_t _file_count = g_spotpass_files.size();
+		const size_t _file_count = g_opened_files.size();
 		if (_file_count > 0)
 		{
 			ImGui::Separator();
 
 			if (ImGui::MenuItem("Save All"))
 			{
-				for (auto& file : g_spotpass_files)
+				for (auto& file : g_opened_files)
 				{
 					file->save(false);
 				}
 			}
-			TOOLTIP("Save all loaded spotpass files");
+			TOOLTIP("Save all loaded files");
 
 			ImGui::SameLine();
 			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
@@ -211,13 +219,18 @@ void ImGuiPanel::render()
 
 				if (directory)
 				{
-					for (auto& file : g_spotpass_files)
+					for (auto& file : g_opened_files)
 					{
-						file->save_all_ghost_miis(directory_utf16);
+						if (file->type == BOSS)
+						{
+							BOSSRankingData* boss_file = (BOSSRankingData*)file.get();
+
+							boss_file->save_all_ghost_miis(directory_utf16);
+						}
 					}
 				}
 			}
-			TOOLTIP("Saves miis from all ghosts within loaded spotpass files");
+			TOOLTIP("Saves miis from all ghosts within loaded SpotPass files");
 		}
 
 		ImGui::EndMenu();
@@ -246,25 +259,25 @@ void ImGuiPanel::render()
 
 		ImGuiID dock_id_left = 0, dock_id_right = 0;
 		ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.25f, &dock_id_left, &dock_id_right);
-		ImGui::DockBuilderDockWindow("Cups", dock_id_left);
-		ImGui::DockBuilderDockWindow("Ghost", dock_id_right);
+		ImGui::DockBuilderDockWindow("##Files", dock_id_left);
+		ImGui::DockBuilderDockWindow("##FileDetails", dock_id_right);
 
 		ImGui::DockBuilderFinish(dockspace_id);
 	}
 
 	ImGui::DockSpaceOverViewport(dockspace_id, ImGui::GetMainViewport());
 
-	ImGui::Begin("Cups", 0, ImGuiWindowFlags_NoCollapse);
+	ImGui::Begin("##Files", 0, ImGuiWindowFlags_NoCollapse);
 	ImGui::Text("%.03f Fps", ImGui::GetIO().Framerate);
 
 	uint32_t idx = 0;
-	ImGui::BeginTabBar("Loaded Cups", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_Reorderable);
+	ImGui::BeginTabBar("Loaded Files", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_Reorderable);
 
-	for (auto& _spdata : g_spotpass_files)
+	for (auto& file : g_opened_files)
 	{
-		const std::string _label = std::format("{}{}", _spdata->edited ? "*" : "", cup_name[_spdata->cup_id]);
-		const uint32_t _label_color = _spdata->edited ? IM_COL32(250, 110, 90, 178) : IM_COL32(46, 89, 148, 178);
-		const uint32_t _label_active_color = _spdata->edited ? IM_COL32(250, 110, 90, 255) : IM_COL32(46, 89, 148, 255);
+		const std::string _label = std::format("{}{}", file->edited ? "*" : "", file->display_name);
+		const uint32_t _label_color = file->edited ? IM_COL32(250, 110, 90, 178) : IM_COL32(46, 89, 148, 178);
+		const uint32_t _label_active_color = file->edited ? IM_COL32(250, 110, 90, 255) : IM_COL32(46, 89, 148, 255);
 
 		ImGui::PushID(idx);
 		ImGui::PushStyleColor(ImGuiCol_Tab, _label_color);
@@ -273,7 +286,7 @@ void ImGuiPanel::render()
 		if (ImGui::BeginTabItem(_label.c_str()))
 		{
 			is_cup_selected = true;
-			current_file = _spdata;
+			current_file = file;
 
 			ImGui::EndTabItem();
 		}
@@ -294,7 +307,7 @@ void ImGuiPanel::render()
 		ImGui::PopID();
 
 		ImGui::PopStyleColor(2);
-		TOOLTIP("%s%s", _spdata->file_directory.c_str(), _spdata->edited ? "\n(Modified)" : "");
+		TOOLTIP("%s%s", file->file_directory.c_str(), file->edited ? "\n(Modified)" : "");
 
 		ImGui::PopID();
 		idx++;
@@ -303,48 +316,10 @@ void ImGuiPanel::render()
 
 	if (is_cup_selected)
 	{
-		for (int i = 0; i < 4; i++)
+		switch (current_file->type)
 		{
-			const uint8_t course_id = cup_courses[current_file->cup_id][i];
-
-			ImGui::PushID(i);
-			if (ImGui::Selectable(course_name[course_id], course_idx == i))
-			{
-				course_idx = i;
-			}
-			ImGui::PopID();
-
-			ImGui::SameLine();
-
-			const uint8_t __ghost_count = current_file->ghost_count[i];
-
-			ImGui::PushStyleColor(ImGuiCol_Text, __ghost_count >= 20 ? ImVec4(1.0, 0.5, 0.5, 1.0) : ImVec4(0.5, 0.5, 0.5, 1.0));
-			ImGui::Text("(%i/20)", __ghost_count);
-			ImGui::PopStyleColor();
-		}			
-
-		if (ImGui::Button("Save"))
-		{
-			current_file->save(false);
-		}
-
-		this->ranking_directory_text();
-		
-
-		ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
-
-		if (ImGui::Button("Add Ghost"))
-		{
-			const char* file_path = open_file();
-
-			if (current_file->add_ghost(course_idx, file_path) == false)
-			{
-				ImGui::PushID("Load Failed");
-				ImGui::OpenPopup("Load Failed");
-				ImGui::PopID();
-				ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-			}
+		case SerializedFileType::BOSS: boss_info(); break;
+		case SerializedFileType::ARCHIVE: archive_info(); break;
 		}
 	}
 
@@ -361,71 +336,202 @@ void ImGuiPanel::render()
 	ImGui::PopID();
 	ImGui::End();
 
-	ImGui::Begin("Ghost", 0, ImGuiWindowFlags_NoCollapse);
+	ImGui::Begin("##FileDetails", 0, ImGuiWindowFlags_NoCollapse);
 	if (current_file)
 	{
-		if (ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH))
+		switch (current_file->type)
 		{
-			std::array<std::unique_ptr<Ghost>, 20>* coursedata = current_file->get_course(course_idx);
-
-			if (coursedata)
-			{
-				for (uint32_t i = 0; i < 20; i++)
-				{
-					std::unique_ptr<Ghost>& current_ghost = coursedata->at(i);
-
-					if (current_ghost == nullptr)
-					{
-						continue;
-					}
-
-					ImGui::PushID(current_ghost.get());
-					ImGui::TableNextRow();
-					ImGui::TableSetColumnIndex(0);
-
-					draw_ghost_details(current_ghost);
-
-					if (ImGui::Button("Delete Ghost"))
-					{
-						current_file->delete_ghost(course_idx, current_ghost);
-					}
-
-					if (ImGui::Button("Overwrite Ghost"))
-					{
-						current_file->overwrite_ghost(current_ghost, open_file());
-					}
-
-					if (ImGui::Button("Extract Ghost"))
-					{
-						current_file->extract_ghost(current_ghost);
-					}
-
-					if (ImGui::Button("Export Mii Data (.cfsd)"))
-					{
-						const uint64_t system_id = current_ghost->mii_data.system_id;
-
-						auto file = create_file(std::format("{:016x}.cfsd", system_id).c_str(), "CTR Face Store Data (*.cfsd)\0*.cfsd\0All\0*.*\0");
-
-						if (file)
-						{
-							std::fstream mii_stream(file, std::ios::out | std::ios::binary);
-
-							bin_write<CFLStoreData>(&current_ghost->mii_data, mii_stream, (uint32_t)0, sizeof(CFLStoreData));
-
-							mii_stream.close();
-						}
-					}
-
-					ImGui::PopID();
-				}
-			}
-
-			ImGui::EndTable();
+		case SerializedFileType::BOSS: boss_details(); break;
+		case SerializedFileType::ARCHIVE: archive_details(); break;
 		}
 	}
 	ImGui::End();
 
 	imgui_cfg_render();
+}
+
+void ImGuiPanel::boss_info()
+{
+	BOSSRankingData* boss = (BOSSRankingData*)current_file.get();
+
+	for (int i = 0; i < 4; i++)
+	{
+		const uint8_t course_id = cup_courses[boss->cup_id][i];
+
+		ImGui::PushID(i);
+		if (ImGui::Selectable(course_name[course_id], course_idx == i))
+		{
+			course_idx = i;
+		}
+		ImGui::PopID();
+
+		ImGui::SameLine();
+
+		const uint8_t __ghost_count = boss->ghost_count[i];
+
+		ImGui::PushStyleColor(ImGuiCol_Text, __ghost_count >= 20 ? ImVec4(1.0, 0.5, 0.5, 1.0) : ImVec4(0.5, 0.5, 0.5, 1.0));
+		ImGui::Text("(%i/20)", __ghost_count);
+		ImGui::PopStyleColor();
+	}
+
+	if (ImGui::Button("Save"))
+	{
+		boss->save(false);
+	}
+
+	this->ranking_directory_text();
+
+
+	ImGui::NewLine(); ImGui::Separator(); ImGui::NewLine();
+
+	if (ImGui::Button("Add Ghost"))
+	{
+		const char* file_path = open_file();
+
+		if (boss->add_ghost(course_idx, file_path) == false)
+		{
+			ImGui::PushID("Load Failed");
+			ImGui::OpenPopup("Load Failed");
+			ImGui::PopID();
+			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		}
+	}
+}
+
+void ImGuiPanel::boss_details()
+{
+	BOSSRankingData* boss = (BOSSRankingData*)current_file.get();
+
+	if (ImGui::BeginTable("Ghosts", 1, ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH))
+	{
+		std::array<std::unique_ptr<Ghost>, 20>* coursedata = boss->get_course(course_idx);
+
+		if (coursedata)
+		{
+			for (uint32_t i = 0; i < 20; i++)
+			{
+				std::unique_ptr<Ghost>& current_ghost = coursedata->at(i);
+
+				if (current_ghost == nullptr)
+				{
+					continue;
+				}
+
+				ImGui::PushID(current_ghost.get());
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+
+				draw_ghost_details(current_ghost);
+
+				if (ImGui::Button("Delete Ghost"))
+				{
+					boss->delete_ghost(course_idx, current_ghost);
+				}
+
+				if (ImGui::Button("Overwrite Ghost"))
+				{
+					boss->overwrite_ghost(current_ghost, open_file());
+				}
+
+				if (ImGui::Button("Extract Ghost"))
+				{
+					boss->extract_ghost(current_ghost);
+				}
+
+				if (ImGui::Button("Export Mii Data (.cfsd)"))
+				{
+					const uint64_t system_id = current_ghost->mii_data.system_id;
+
+					auto file = create_file(std::format("{:016x}.cfsd", system_id).c_str(), "CTR Face Store Data (*.cfsd)\0*.cfsd\0All\0*.*\0");
+
+					if (file)
+					{
+						std::fstream mii_stream(file, std::ios::out | std::ios::binary);
+
+						bin_write<CFLStoreData>(&current_ghost->mii_data, mii_stream, (uint32_t)0, sizeof(CFLStoreData));
+
+						mii_stream.close();
+					}
+				}
+
+				ImGui::PopID();
+			}
+		}
+
+		ImGui::EndTable();
+	}
+}
+
+void ImGuiPanel::archive_info()
+{
+
+}
+
+void ImGuiPanel::archive_details()
+{
+	SaveArchiveFile* archive = (SaveArchiveFile*)current_file.get();
+	SystemSaveArchive* serialized = archive->serialized.get();
+
+	const auto player_name = utf8_conv.to_bytes(utf16be((char*)serialized->mii.name_utf16, 0x14));
+	const auto cec_comment = utf8_conv.to_bytes(utf16be((char*)serialized->cec_comment, 0x11));
+
+	mii_image(&serialized->mii, 128);
+
+	if (ImGui::BeginTable("##", 2, ImGuiTableFlags_SizingFixedFit))
+	{
+		ImGui::TableSetupColumn("##", 0, 64);
+		ImGui::TableSetupColumn("##", 0, 256);
+
+
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(0);
+		ImGui::Text("Mii Name");
+		ImGui::TableSetColumnIndex(1);
+		ImGui::PushFont(g_font_rodin);
+		ImGui::InputText("##Mii Name", (char*)player_name.c_str(), player_name.size(), ImGuiInputTextFlags_ReadOnly);
+		ImGui::PopFont();
+
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(0);
+		ImGui::Text("Phrase");
+		ImGui::TableSetColumnIndex(1);
+		ImGui::InputText("##Phrase", (char*)cec_comment.c_str(), cec_comment.size(), ImGuiInputTextFlags_ReadOnly);
+
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(0);
+		ImGui::Text("Wins");
+		ImGui::TableSetColumnIndex(1);
+		ImGui::InputInt("##Wins", (int*)&serialized->flags.flag_data.wins, 1, 100, ImGuiInputTextFlags_ReadOnly);
+
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(0);
+		ImGui::Text("Losses");
+		ImGui::TableSetColumnIndex(1);
+		ImGui::InputInt("##Losses", (int*)&serialized->flags.flag_data.losses, 1, 100, ImGuiInputTextFlags_ReadOnly);
+
+		ImGui::EndTable();
+	}
+
+	if (ImGui::TreeNode("Recent Opponents"))
+	{
+		OpponentData* opponent = nullptr;
+		for (int i = 0; i < 100; i++)
+		{
+			opponent = &serialized->opponents[i];
+
+			if (opponent->is_initialized == false)
+			{
+				continue;
+			}
+
+			const auto opponent_name = utf8_conv.to_bytes(utf16be((char*)opponent->player_data.mii.name_utf16, 0x14));
+			ImGui::PushFont(g_font_rodin);
+			ImGui::Text("%s", (char*)opponent_name.c_str());
+			ImGui::PopFont();
+		}
+		ImGui::TreePop();
+	}
 }
 
 void ImGuiPanel::ranking_directory_text()
@@ -459,16 +565,16 @@ void ImGuiPanel::single_file_operations()
 	{
 		g_funcqueue.emplace_back([this]()
 			{
-				auto it = std::find(g_spotpass_files.begin(), g_spotpass_files.end(), current_file);
+				auto it = std::find(g_opened_files.begin(), g_opened_files.end(), current_file);
 
-				if (it != g_spotpass_files.end())
+				if (it != g_opened_files.end())
 				{
-					g_spotpass_files.erase(it);
+					g_opened_files.erase(it);
 				}
 
 				std::vector<std::string> opened_files;
 
-				for (auto& file : g_spotpass_files)
+				for (auto& file : g_opened_files)
 				{
 					opened_files.emplace_back(file->file_directory);
 				}

@@ -16,6 +16,8 @@ TextureManager g_texture_manager;
 // functions to be called at the end of a frame
 std::vector<std::function<void()>> g_funcqueue;
 
+std::vector<std::shared_ptr<SerializedFile>> g_opened_files;
+
 ImFont* g_font_default = nullptr;
 ImFont* g_font_rodin = nullptr;
 ImFont* g_font_monospace = nullptr;
@@ -116,6 +118,15 @@ int main()
 		SDL_RenderPresent(g_renderer);
 		SDL_DelayPrecise(std::clamp(g_window_framerate - (SDL_CONVERT_PERFORMANCE_TIME - _start_interv), 0.0, g_window_framerate));
 	}
+
+	std::vector<std::string> opened_files;
+
+	for (auto& file : g_opened_files)
+	{
+		opened_files.emplace_back(file->file_directory);
+	}
+
+	Config::set_setting("opened_files", YAML::Node(opened_files));
 
 	Config::save();
 	g_texture_manager.terminate_thread();

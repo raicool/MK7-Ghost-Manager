@@ -1,15 +1,10 @@
 #pragma once
 
 #include "ghost.h"
+#include "file.h"
 
-struct BOSSRankingData
+struct BOSSRankingData : SerializedFile
 {
-	bool ready = false;
-	bool edited = false;
-
-	std::fstream spotpass_data;
-	std::string file_directory;
-
 	uint8_t header_data[0x64];
 
 	std::array<std::unique_ptr<Ghost>, 20> course_1;
@@ -49,19 +44,20 @@ struct BOSSRankingData
 		}
 	}
 
-	// file operation functions
-	uint8_t load(std::string dir);
-	void save(bool prompt_file = true);
-	void reload();
-	uint8_t load_course_ghosts(std::array<std::unique_ptr<Ghost>, 20>& courses, size_t file_offset);
+	void load(std::string dir) override;
+	void save(bool prompt_file = true) override;
+	void reload() override;
+	void close() override;
 
-	//
+	uint8_t load_course_ghosts(std::array<std::unique_ptr<Ghost>, 20>& courses, size_t file_offset);
 	bool overwrite_ghost(std::unique_ptr<Ghost>& ghost, const char* ghost_dir);
 	void extract_ghost(std::unique_ptr<Ghost>& _ghost);
 	bool add_ghost(uint8_t course_index, const char* ghost_dir);
 	void delete_ghost(uint8_t course_index, std::unique_ptr<Ghost>& _ghost);
 
 	void save_all_ghost_miis(const std::u16string directory_utf16);
+
+	BOSSRankingData() { type = SerializedFileType::BOSS; };
 };
 
 void open_spotpass_file(const char* file_path);

@@ -6,38 +6,23 @@
 
 #include <yaml-cpp/yaml.h>
 
-std::vector<std::shared_ptr<BOSSRankingData>> g_spotpass_files;
+extern std::vector<std::shared_ptr<SerializedFile>> g_opened_files;
 
 void open_spotpass_file(const char* file_path)
 {
-	std::shared_ptr<BOSSRankingData> _spdata = std::make_shared<BOSSRankingData>();
-	_spdata->load(file_path);
+	std::shared_ptr<BOSSRankingData> boss = std::make_shared<BOSSRankingData>();
+	boss->load(file_path);
 
-	if (_spdata->cup_id != -1)
+	if (boss->ready)
 	{
-		LOG_DEBUG("Cup = {}, file = {}", _spdata->cup_id, file_path);
+		LOG_DEBUG("Cup = {}, file = {}", boss->cup_id, file_path);
 
-		g_spotpass_files.emplace_back(_spdata);
-
-		std::vector<std::string> opened_files;
-
-		for (auto& file : g_spotpass_files)
-		{
-			opened_files.emplace_back(file->file_directory);
-		}
-
-		Config::set_setting("opened_files", YAML::Node(opened_files));
+		g_opened_files.emplace_back(boss);
 	}
-}
-
-std::vector<std::shared_ptr<BOSSRankingData>> get_spotpass_files()
-{
-	return g_spotpass_files;
 }
 
 std::array<std::unique_ptr<Ghost>, 20>* BOSSRankingData::get_course(uint8_t index)
 {
-	
 	switch (index)
 	{
 	case 0: return &this->course_1;
@@ -48,46 +33,47 @@ std::array<std::unique_ptr<Ghost>, 20>* BOSSRankingData::get_course(uint8_t inde
 	}
 }
 
-uint8_t BOSSRankingData::load(std::string dir)
+void BOSSRankingData::load(std::string dir)
 {
 	uint32_t offset = 0;
 	uint32_t u32buffer = 0;
 
 	file_directory = dir;
 
-	if (spotpass_data.is_open())
+	if (file_stream.is_open())
 	{
-		spotpass_data.close();
+		file_stream.close();
 	}
 	
-	spotpass_data.open(dir, std::ios::in | std::ios::binary | std::ios::ate);
-	size_t file_size = spotpass_data.tellg();
+	file_stream.open(dir, std::ios::in | std::ios::binary | std::ios::ate);
+	size_t file_size = file_stream.tellg();
 
 	if (file_size != 0xcafe4)
 	{
 		LOG_ERROR("load error : the given spotpass file was the incorrect size!");
-		spotpass_data.close();
-		return -1;
+		file_stream.close();
+		return;
 	}
 
-	if (!spotpass_data.is_open())
+	if (!file_stream.is_open())
 	{
 		LOG_ERROR("load error : could not open \"{}\"", dir);
-		return -1;
+		return;
 	}
 
-	bin_read<uint8_t>(&cup_id, spotpass_data, 0x2f);
-	bin_read<uint8_t>(header_data, spotpass_data, (uint32_t)0, 0x64);
+	bin_read<uint8_t>(&cup_id, file_stream, 0x2f);
+	bin_read<uint8_t>(header_data, file_stream, (uint32_t)0, 0x64);
 
 	ghost_count[0] = this->load_course_ghosts(course_1, 0x64);
 	ghost_count[1] = this->load_course_ghosts(course_2, 0x32c44);
 	ghost_count[2] = this->load_course_ghosts(course_3, 0x65824);
 	ghost_count[3] = this->load_course_ghosts(course_4, 0x98404);
 
-	spotpass_data.close();
+	file_stream.close();
 
+	display_name = cup_name[cup_id];
 	ready = true;
-	return cup_id;
+	return;
 }
 
 void BOSSRankingData::save(bool prompt_file)
@@ -148,7 +134,7 @@ uint8_t BOSSRankingData::load_course_ghosts(std::array<std::unique_ptr<Ghost>, 2
 		// the maximum amount of ghosts inside of a course is 20
 		uint32_t offset = file_offset + (GHOST_SIZE * i);
 
-		if (verify_magic("DGDC", spotpass_data, sizeof(char) * 4, offset) == false)
+		if (verify_magic("DGDC", file_stream, sizeof(char) * 4, offset) == false)
 			continue; // invalid ghost header, skip
 
 		auto _ghost = std::make_unique<Ghost>();
@@ -159,7 +145,7 @@ uint8_t BOSSRankingData::load_course_ghosts(std::array<std::unique_ptr<Ghost>, 2
 		{
 			uint8_t* __ghost_data_buffer = new uint8_t[GHOST_SIZE];
 
-			bin_read<uint8_t>(__ghost_data_buffer, spotpass_data, offset, GHOST_SIZE);
+			bin_read<uint8_t>(__ghost_data_buffer, file_stream, offset, GHOST_SIZE);
 
 			_ghost->parse_data(__ghost_data_buffer);
 
@@ -326,13 +312,17 @@ void BOSSRankingData::save_all_ghost_miis(const std::u16string directory_utf16)
 
 void BOSSRankingData::reload()
 {
-	edited = false;
+	this->close();
+	this->load(file_directory);
+}
 
+void BOSSRankingData::close()
+{
 	this->for_each_file([](std::unique_ptr<Ghost>& ghost)
 		{
 			ghost.release();
 		}
 	);
 
-	load(file_directory);
+	file_stream.close();
 }

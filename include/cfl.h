@@ -49,7 +49,6 @@ struct CFLStoreData
 
 	uint16_t padding_0x5c;
 	uint16_t crc16;
-
 };
 static_assert(sizeof(CFLStoreData) == 0x60, "invalid size for CFLStoreData struct");
 #pragma pack(pop)

@@ -1,13 +1,19 @@
 #pragma once
 
 struct Ghost;
-struct BOSSRankingData;
+struct SerializedFile;
 struct ImGuiPanel
 {
-	std::shared_ptr<BOSSRankingData> current_file = nullptr;
+	std::shared_ptr<SerializedFile> current_file = nullptr;
 	int32_t course_idx = 0;
 	bool is_cup_selected = false;
 	
+	void boss_info();
+	void boss_details();
+
+	void archive_info();
+	void archive_details();
+
 	void render_hex_view(uint8_t* src, size_t size, uint16_t view_length = 17, uint16_t view_width = 16);
 
 	// Draw text for currently loaded ranking file
