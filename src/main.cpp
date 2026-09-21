@@ -2,6 +2,7 @@
 
 #include "common/common.h"
 #include "texture.h"
+#include "archive.h"
 #include "boss.h"
 #include "version.h"
 #include "panel.h"
@@ -81,6 +82,7 @@ int main()
 	for (std::string& path : config_opened_files)
 	{
 		open_spotpass_file(path.c_str());
+		open_archive_file(path.c_str());
 	}
 
 	double _start_interv = 0;

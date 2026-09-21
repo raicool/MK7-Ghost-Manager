@@ -152,7 +152,7 @@ struct SystemSaveArchive
 	uint16_t unknown_0x06;
 	CFLStoreData mii;
 	PlayerID id;
-	wchar_t cec_comment[17];
+	uint8_t cec_comment[0x22];
 
 	uint8_t padding[0x5e];
 
