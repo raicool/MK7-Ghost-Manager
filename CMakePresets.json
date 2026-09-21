@@ -4,7 +4,7 @@
         {
             "name": "windows-base",
             "hidden": true,
-            "generator": "MinGW Makefiles",
+            "generator": "Ninja",
             "binaryDir": "${sourceDir}/bin/${presetName}",
             "installDir": "${sourceDir}/bin/install/${presetName}",
             "condition": {
@@ -65,7 +65,7 @@
         {
             "name": "linux-debug",
             "displayName": "linux-debug",
-            "generator": "Unix Makefiles",
+            "generator": "Ninja",
             "binaryDir": "${sourceDir}/bin/${presetName}",
             "installDir": "${sourceDir}/bin/install/${presetName}",
             "environment": {
@@ -84,7 +84,7 @@
         {
             "name": "linux-release",
             "displayName": "linux-release",
-            "generator": "Unix Makefiles",
+            "generator": "Ninja",
             "binaryDir": "${sourceDir}/bin/${presetName}",
             "installDir": "${sourceDir}/bin/install/${presetName}",
             "environment": {
