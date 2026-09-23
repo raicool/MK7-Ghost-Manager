@@ -6,7 +6,7 @@ namespace CacheDirectory
 {
 	static uint8_t hash_shorthand(size_t hash)
 	{
-		return (hash & 0xff);
+		return (hash >> ((sizeof(size_t) * 8) - 8) & 0xff);
 	}
 
 	static std::string get_cache_filepath(const std::string& identifier)
