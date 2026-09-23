@@ -10,6 +10,7 @@
 #include "archive.h"
 #include "cfg.h"
 #include "imgui_cfg.h"
+#include "cache.h"
 
 #include <imgui_internal.h>
 
@@ -239,6 +240,7 @@ void ImGuiPanel::render()
 	if (ImGui::BeginMenu("Settings"))
 	{
 		if (ImGui::MenuItem("Open Settings")) g_imgui_config_screen_open = true;
+		if (ImGui::MenuItem("Clear Cached Images")) CacheDirectory::delete_all();
 
 		ImGui::EndMenu();
 	}

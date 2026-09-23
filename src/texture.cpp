@@ -5,6 +5,7 @@
 #include "common/log.h"
 #include "common/type.h"
 #include "cfl.h"
+#include "cache.h"
 
 #include <queue>
 
@@ -145,20 +146,32 @@ void async_job_fetch_texture()
 		const std::string formatted = std::vformat(mii_url, std::make_format_args(mii_data_string_hexadecimal));
 
 		SDL_IOStream* img = nullptr;
-		std::stringstream __dummy_stream;
 
-		httplib::Result res = client.Get(formatted,
-			[&](const char* data, size_t data_length)
-			{
-				__dummy_stream.write(data, data_length);
-				return true;
-			}
-		);
+		if (CacheDirectory::cache_exists(mii_data_string_hexadecimal) == false)
+		{
+			std::stringstream __dummy_stream;
 
-		auto view = __dummy_stream.view();
-		img = SDL_IOFromMem((void*)view.data(), view.size());
+			httplib::Result res = client.Get(formatted,
+				[&](const char* data, size_t data_length)
+				{
+					__dummy_stream.write(data, data_length);
+					return true;
+				}
+			);
 
-		job.texture->surface = IMG_Load_IO(img, true);
+			const std::string_view& view = __dummy_stream.view();
+
+			CacheDirectory::save_cache_file((char*)view.data(), view.size(), mii_data_string_hexadecimal);
+			img = SDL_IOFromMem((void*)view.data(), view.size());
+			job.texture->surface = IMG_Load_IO(img, true);
+		}
+		else
+		{
+			const std::string path = CacheDirectory::get_cache_filepath(mii_data_string_hexadecimal);
+
+			job.texture->surface = IMG_Load(path.c_str());
+		}
+
 		job.texture->status = SURFACE_CREATED;
 	}
 }
