@@ -27,7 +27,7 @@ enum PlayerDataFlags : uint32_t
 #pragma pack(push, 1)
 struct PlayerID
 {
-	uint64_t transterable_id;
+	uint64_t transferable_id;
 	uint64_t system_tick;
 };
 
