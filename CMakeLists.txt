@@ -25,6 +25,9 @@ if(Git_FOUND)
   endif()
 endif()
 
+file(READ "version" VERSION)
+add_compile_definitions("VERSION=\"${VERSION}\"")
+
 file(GLOB_RECURSE CXX_SOURCE "src/*.cpp")
 file(GLOB_RECURSE C_SOURCE "src/*.c")
 

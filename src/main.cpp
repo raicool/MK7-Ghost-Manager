@@ -4,7 +4,6 @@
 #include "texture.h"
 #include "archive.h"
 #include "boss.h"
-#include "version.h"
 #include "panel.h"
 #include "cfg.h"
 
