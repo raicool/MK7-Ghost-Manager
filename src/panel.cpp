@@ -558,14 +558,15 @@ void ImGuiPanel::archive_details()
 			ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | 
 			ImGuiTableFlags_ScrollY | ImGuiTableFlags_HighlightHoveredColumn;
 
-		if (ImGui::BeginTable("##", 5, flags))
+		if (ImGui::BeginTable("##", 6, flags))
 		{
 			ImGui::TableSetupScrollFreeze(0, 1);
 			ImGui::TableSetupColumn("##", 0, 32);
 			ImGui::TableSetupColumn("##", 0, 26);
-			ImGui::TableSetupColumn("Name", 0, 512);
-			ImGui::TableSetupColumn("Wins", 0, 128);
-			ImGui::TableSetupColumn("Losses", 0, 128);
+			ImGui::TableSetupColumn("Name", 0, 128);
+			ImGui::TableSetupColumn("Wins", 0, 64);
+			ImGui::TableSetupColumn("Losses", 0, 64);
+			ImGui::TableSetupColumn("Set History (W-L)", 0, 64);
 			ImGui::TableHeadersRow();
 
 			OpponentData* opponent = nullptr;
@@ -592,6 +593,15 @@ void ImGuiPanel::archive_details()
 					ImGui::TableSetColumnIndex(0);
 					ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
 					mii_image(&opponent->player_data.mii, 32);
+					if (ImGui::IsItemHovered())
+					{
+						if (ImGui::BeginTooltip())
+						{
+							mii_image(&opponent->player_data.mii, 128);
+							ImGui::InputText("##Mii Name Enlarged", (char*)opponent_name.c_str(), opponent_name.size(), ImGuiInputTextFlags_ReadOnly);
+							ImGui::EndTooltip();
+						}
+					}
 					ImGui::PopStyleVar();
 
 					ImGui::TableSetColumnIndex(1);
@@ -607,6 +617,9 @@ void ImGuiPanel::archive_details()
 
 					ImGui::TableSetColumnIndex(4);
 					ImGui::Text("%i", opponent->player_data.losses);
+
+					ImGui::TableSetColumnIndex(5);
+					ImGui::Text("%i-%i", opponent->player_data.wins_opponent, opponent->player_data.losses_opponent);
 				}
 			}
 
