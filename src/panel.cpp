@@ -480,9 +480,8 @@ void ImGuiPanel::archive_details()
 
 	if (ImGui::BeginTable("##", 2, ImGuiTableFlags_SizingFixedFit))
 	{
-		ImGui::TableSetupColumn("##", 0, 64);
-		ImGui::TableSetupColumn("##", 0, 256);
-
+		ImGui::TableSetupColumn("##", 0, 200);
+		ImGui::TableSetupColumn("##", 0, 512);
 
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(0);
@@ -510,26 +509,108 @@ void ImGuiPanel::archive_details()
 		ImGui::TableSetColumnIndex(1);
 		ImGui::InputInt("##Losses", (int*)&serialized->flags.flag_data.losses, 1, 100, ImGuiInputTextFlags_ReadOnly);
 
+		ImGui::TableNextRow();
+		ImGui::TableSetColumnIndex(0);
+		if (ImGui::TreeNodeEx("Advanced Info", ImGuiTreeNodeFlags_LabelSpanAllColumns))
+		{
+			const auto system_tick = std::vformat("{:08x}", std::make_format_args(serialized->id.system_tick));
+			const auto transferable_id = std::vformat("{:016x}", std::make_format_args(serialized->id.transferable_id));
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("id->system_tick");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::PushFont(g_font_monospace);
+			ImGui::InputText("##id->system_tick", (char*)system_tick.c_str(), system_tick.size(), ImGuiInputTextFlags_ReadOnly);
+			ImGui::PopFont();
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("id->transferable_id");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::PushFont(g_font_monospace);
+			ImGui::InputText("##id->transferable_id", (char*)transferable_id.c_str(), transferable_id.size(), ImGuiInputTextFlags_ReadOnly);
+			ImGui::PopFont();
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("last_upload_player_log_time");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::InputInt("##last_upload_player_log_time", (int*)&serialized->last_upload_player_log_time, 1, 100, ImGuiInputTextFlags_ReadOnly);
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("ghost_update_bit_flag");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::InputInt("##ghost_update_bit_flag", (int*)&serialized->ghost_update_bit_flag, 1, 100, ImGuiInputTextFlags_ReadOnly);
+
+			ImGui::TreePop();
+		}
+
 		ImGui::EndTable();
 	}
 
 	if (ImGui::TreeNode("Recent Opponents"))
 	{
-		OpponentData* opponent = nullptr;
-		for (int i = 0; i < 100; i++)
-		{
-			opponent = &serialized->opponents[i];
+		constexpr ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | 
+			ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | 
+			ImGuiTableFlags_ScrollY | ImGuiTableFlags_HighlightHoveredColumn;
 
-			if (opponent->is_initialized == false)
+		if (ImGui::BeginTable("##", 5, flags))
+		{
+			ImGui::TableSetupScrollFreeze(0, 1);
+			ImGui::TableSetupColumn("##", 0, 32);
+			ImGui::TableSetupColumn("##", 0, 26);
+			ImGui::TableSetupColumn("Name", 0, 512);
+			ImGui::TableSetupColumn("Wins", 0, 128);
+			ImGui::TableSetupColumn("Losses", 0, 128);
+			ImGui::TableHeadersRow();
+
+			OpponentData* opponent = nullptr;
+
+			ImGuiListClipper clipper;
+			clipper.Begin(100);
+
+			while (clipper.Step())
 			{
-				continue;
+				for (int i = clipper.DisplayStart; i < 100; i++)
+				{
+					if (i >= clipper.DisplayEnd) break;
+
+					opponent = &serialized->opponents[i];
+
+					if (opponent->is_initialized == false)
+					{
+						continue;
+					}
+
+					const auto opponent_name = utf8_conv.to_bytes(utf16be((char*)opponent->player_data.mii.name_utf16, 0x14));
+
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
+					ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
+					mii_image(&opponent->player_data.mii, 32);
+					ImGui::PopStyleVar();
+
+					ImGui::TableSetColumnIndex(1);
+					nation_flag_image(opponent->player_data.country);
+
+					ImGui::TableSetColumnIndex(2);
+					ImGui::PushFont(g_font_rodin);
+					ImGui::Text("%s", (char*)opponent_name.c_str());
+					ImGui::PopFont();
+
+					ImGui::TableSetColumnIndex(3);
+					ImGui::Text("%i", opponent->player_data.wins);
+
+					ImGui::TableSetColumnIndex(4);
+					ImGui::Text("%i", opponent->player_data.losses);
+				}
 			}
 
-			const auto opponent_name = utf8_conv.to_bytes(utf16be((char*)opponent->player_data.mii.name_utf16, 0x14));
-			ImGui::PushFont(g_font_rodin);
-			ImGui::Text("%s", (char*)opponent_name.c_str());
-			ImGui::PopFont();
+			ImGui::EndTable();
 		}
+
 		ImGui::TreePop();
 	}
 }
@@ -540,7 +621,7 @@ void ImGuiPanel::ranking_directory_text()
 	{
 		const char* _file_directory = current_file->file_directory.c_str();
 		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
-		ImGui::Text(_file_directory);
+		ImGui::Text("%s", _file_directory);
 		ImGui::PopStyleColor();
 
 		if (ImGui::IsItemHovered())
